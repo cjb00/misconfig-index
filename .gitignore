@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.pytest_cache/
+.mypy_cache/
+
+# Byte-compiled / logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Databases
+*.db
+*.sqlite
+
+# Build artifacts
+dist/
+build/
+
+# macOS
+.DS_Store

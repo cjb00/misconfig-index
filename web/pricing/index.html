@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing — Misconfig Index</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/blog/" class="nav-link">Blog</a>
+        <a href="/pricing/" class="nav-link active">Pricing</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero hero--slim">
+    <div class="hero-content">
+      <h1>Simple, honest pricing</h1>
+      <p class="tagline">Start free. Upgrade when you need history, private repos, or team features.</p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Pricing cards -->
+    <section class="panel" style="padding: 32px; background: transparent; border: none; box-shadow: none;">
+      <div class="pricing-grid">
+
+        <!-- Free -->
+        <div class="pricing-card">
+          <p class="plan-name">Free</p>
+          <p class="plan-price">$0<span> / forever</span></p>
+          <p class="plan-desc">For individuals and open source projects.</p>
+          <hr class="plan-divider">
+          <ul class="plan-features">
+            <li>1 organisation</li>
+            <li>Unlimited local scans</li>
+            <li>50 API ingests / month</li>
+            <li>30-day score history</li>
+            <li>Public repos only</li>
+            <li>Live score badge</li>
+            <li>GitHub Actions integration</li>
+            <li>REST API access</li>
+            <li class="unavail">Private repo scanning</li>
+            <li class="unavail">Slack / email alerts</li>
+            <li class="unavail">Priority support</li>
+          </ul>
+          <a href="https://api.misconfig.dev/docs" class="plan-cta plan-cta-secondary" target="_blank" rel="noopener">Get API Key →</a>
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card featured">
+          <span class="pricing-badge">Most popular</span>
+          <p class="plan-name">Pro</p>
+          <p class="plan-price">$19<span> / month</span></p>
+          <p class="plan-desc">For teams that care about security posture over time.</p>
+          <hr class="plan-divider">
+          <ul class="plan-features">
+            <li>Up to 5 organisations</li>
+            <li>Unlimited local scans</li>
+            <li>Unlimited API ingests</li>
+            <li>1-year score history</li>
+            <li>Private &amp; public repos</li>
+            <li>Live score badge</li>
+            <li>GitHub Actions integration</li>
+            <li>REST API access</li>
+            <li>Slack &amp; email alerts</li>
+            <li>Weekly score trend reports</li>
+            <li>Priority email support</li>
+          </ul>
+          <a href="mailto:hello@misconfig.dev?subject=Pro plan" class="plan-cta plan-cta-primary">Get started →</a>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="pricing-card">
+          <p class="plan-name">Enterprise</p>
+          <p class="plan-price">Custom</p>
+          <p class="plan-desc">For orgs with compliance or self-hosting requirements.</p>
+          <hr class="plan-divider">
+          <ul class="plan-features">
+            <li>Unlimited organisations</li>
+            <li>Unlimited scans &amp; history</li>
+            <li>Private &amp; public repos</li>
+            <li>Self-hosting support</li>
+            <li>SSO / SAML integration</li>
+            <li>Custom rule packs</li>
+            <li>Audit log</li>
+            <li>SLA guarantee</li>
+            <li>Dedicated Slack channel</li>
+            <li>Security review call</li>
+            <li>Invoice billing</li>
+          </ul>
+          <a href="mailto:hello@misconfig.dev?subject=Enterprise plan" class="plan-cta plan-cta-secondary">Contact us →</a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="panel">
+      <h2 style="margin: 0 0 24px 0; font-size: 22px; text-align: center;">Frequently asked questions</h2>
+      <div class="faq-grid">
+
+        <div class="faq-item">
+          <h3>Is the Free plan really free forever?</h3>
+          <p>Yes. The scanner itself is MIT-licensed open source — you can always run it locally for free. The hosted API free tier covers 50 ingests per month with 30 days of history.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What counts as an "API ingest"?</h3>
+          <p>One <code class="inline-code">POST /v1/ingest</code> call — typically one CI run. A mono-repo that scans once per commit counts as one ingest per commit, regardless of findings.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Can I self-host?</h3>
+          <p>Absolutely. The full stack (FastAPI + PostgreSQL + nginx) is one <code class="inline-code">docker compose up</code>. Self-hosted instances have no usage limits. Enterprise adds a support contract.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Does my IaC leave my network?</h3>
+          <p>On the hosted API, we receive the scan payload (findings, file paths, snippets). If that's a concern, self-host. No IaC is ever shared with third parties or used for training.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What IaC formats are supported?</h3>
+          <p>Terraform, Kubernetes YAML, CloudFormation, and Dockerfiles. Pulumi, Ansible, and Bicep are on the roadmap. See <a href="/docs/#supported-iac" style="color: #818cf8;">the docs</a> for details.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>How do I upgrade or cancel?</h3>
+          <p>Email <a href="mailto:hello@misconfig.dev" style="color: #818cf8;">hello@misconfig.dev</a>. Pro plans are month-to-month with no commitment. Cancel any time and keep your data for 30 days.</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+</body>
+</html>

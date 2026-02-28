@@ -1,0 +1,42 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment — never copy into the image
+.venv/
+venv/
+env/
+
+# Version control
+.git/
+.gitignore
+
+# Local dev data & secrets
+.env
+*.db
+*.sqlite
+*.sqlite3
+/data/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Web frontend (served by nginx, not needed in the API image)
+web/
+
+# CI / docs
+.github/
+*.md

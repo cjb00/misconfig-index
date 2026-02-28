@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misconfig Index</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link active">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/blog/" class="nav-link">Blog</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Misconfig Index</h1>
+      <p class="tagline">Cloud misconfigurations, measured at scale.</p>
+      <p class="lede">Scan Terraform and Kubernetes IaC, apply rule packs, and track your security posture over time.</p>
+    </div>
+  </header>
+
+  <main>
+    <!-- Score card -->
+    <section class="panel score-panel">
+      <div class="score-layout">
+        <div class="score-circle-wrap">
+          <div class="score-circle" id="score-circle">
+            <span class="score-number" id="score-value">—</span>
+            <span class="score-label">/ 100</span>
+          </div>
+          <div class="score-grade" id="score-grade"></div>
+        </div>
+        <div class="score-details">
+          <h2 class="score-heading">Misconfig Score</h2>
+          <p class="score-desc">Weighted security posture across all scanned IaC files. Higher is better.</p>
+          <div class="score-breakdown" id="score-breakdown"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trend chart -->
+    <section class="panel chart-panel">
+      <div class="chart-header">
+        <h2>Score Trend</h2>
+        <span class="chart-subtitle" id="chart-subtitle">Loading history…</span>
+      </div>
+      <div class="chart-wrap">
+        <svg id="trend-chart" class="trend-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
+          <!-- Grade band backgrounds -->
+          <rect class="band band-a" x="0" y="0"   width="800" height="16"/>
+          <rect class="band band-b" x="0" y="16"  width="800" height="24"/>
+          <rect class="band band-c" x="0" y="40"  width="800" height="24"/>
+          <rect class="band band-d" x="0" y="64"  width="800" height="32"/>
+          <rect class="band band-f" x="0" y="96"  width="800" height="64"/>
+          <!-- Grade labels -->
+          <text class="band-label" x="6" y="12">A</text>
+          <text class="band-label" x="6" y="32">B</text>
+          <text class="band-label" x="6" y="56">C</text>
+          <text class="band-label" x="6" y="84">D</text>
+          <text class="band-label" x="6" y="130">F</text>
+          <!-- Dynamic path & dots injected by app.js -->
+          <path id="trend-line" class="trend-line" d="" fill="none"/>
+          <g id="trend-dots"></g>
+          <g id="trend-labels"></g>
+        </svg>
+      </div>
+      <div class="chart-axis" id="chart-axis"></div>
+    </section>
+
+    <!-- Industry Benchmark -->
+    <section class="panel benchmark-panel" id="benchmark-panel">
+      <div class="benchmark-header">
+        <div>
+          <h2>Industry Benchmark</h2>
+          <p class="benchmark-subtitle">How the community compares — last 90 days</p>
+        </div>
+        <div class="benchmark-meta" id="benchmark-meta">
+          <span class="bm-stat"><strong id="bm-repos">—</strong> repos</span>
+          <span class="bm-divider">·</span>
+          <span class="bm-stat"><strong id="bm-scans">—</strong> scans</span>
+          <span class="bm-divider">·</span>
+          <span class="bm-stat">avg <strong id="bm-avg">—</strong></span>
+        </div>
+      </div>
+
+      <!-- Grade distribution bar -->
+      <div class="grade-dist-section">
+        <p class="bm-section-label">Grade distribution</p>
+        <div class="grade-bar-wrap">
+          <div class="grade-bar" id="grade-bar">
+            <div class="grade-seg grade-seg--a" id="gseg-a" title="Grade A"></div>
+            <div class="grade-seg grade-seg--b" id="gseg-b" title="Grade B"></div>
+            <div class="grade-seg grade-seg--c" id="gseg-c" title="Grade C"></div>
+            <div class="grade-seg grade-seg--d" id="gseg-d" title="Grade D"></div>
+            <div class="grade-seg grade-seg--f" id="gseg-f" title="Grade F"></div>
+          </div>
+        </div>
+        <div class="grade-bar-legend" id="grade-bar-legend"></div>
+      </div>
+
+      <div class="benchmark-columns">
+        <!-- Category averages -->
+        <div class="bm-col">
+          <p class="bm-section-label">Category averages</p>
+          <div class="cat-avg-list" id="cat-avg-list">
+            <div class="bm-loading">Loading…</div>
+          </div>
+        </div>
+
+        <!-- Top misconfigs -->
+        <div class="bm-col">
+          <p class="bm-section-label">Most common misconfigs</p>
+          <ol class="top-misconfig-list" id="top-misconfig-list">
+            <li class="bm-loading">Loading…</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Scan -->
+    <section class="panel quickscan-panel" id="quickscan-panel">
+      <h2>Quick Scan</h2>
+      <p class="qs-desc">Paste any public GitHub repo URL — we'll download it, scan it, and return a score in seconds.</p>
+      <form class="qs-form" id="qs-form" autocomplete="off">
+        <input
+          type="text"
+          id="qs-input"
+          class="qs-input"
+          placeholder="github.com/owner/repo"
+          spellcheck="false"
+          aria-label="GitHub repository URL"
+        >
+        <button type="submit" class="qs-btn" id="qs-btn">Scan</button>
+      </form>
+
+      <!-- Loading -->
+      <div class="qs-loading" id="qs-loading" hidden>
+        <span class="qs-spinner"></span>
+        <span id="qs-loading-msg">Downloading &amp; scanning…</span>
+      </div>
+
+      <!-- Error -->
+      <div class="qs-error" id="qs-error" hidden></div>
+
+      <!-- Result -->
+      <div class="qs-result" id="qs-result" hidden>
+        <div class="qs-score-row">
+          <div class="qs-circle" id="qs-circle">
+            <span class="qs-score-val" id="qs-score-val">—</span>
+            <span class="qs-score-sub">/ 100</span>
+          </div>
+          <div class="qs-score-details">
+            <div class="qs-grade" id="qs-grade"></div>
+            <div class="qs-meta" id="qs-meta"></div>
+            <div class="qs-breakdown" id="qs-breakdown"></div>
+          </div>
+        </div>
+        <div class="qs-findings-wrap" id="qs-findings-wrap">
+          <p class="qs-section-label">Top findings</p>
+          <ul class="qs-findings" id="qs-findings"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Finding stats -->
+    <section class="panel">
+      <h2>Latest Scan</h2>
+      <div id="stats">
+        <div class="stat">
+          <p class="label">Total Findings</p>
+          <p class="value" id="total-findings">—</p>
+        </div>
+        <div class="stat">
+          <p class="label">Files Scanned</p>
+          <p class="value" id="files-scanned">—</p>
+        </div>
+        <div class="stat">
+          <p class="label">Top Rules</p>
+          <ul id="top-rules"></ul>
+        </div>
+        <div class="stat">
+          <p class="label">By Severity</p>
+          <ul id="severity-counts"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Get Started -->
+    <section class="panel get-started-panel">
+      <h2>Get Started</h2>
+      <p class="gs-intro">Integrate Misconfig Index into your CI pipeline, add a live score badge to your README, or query the API directly.</p>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-badge">Badge</button>
+        <button class="tab-btn" data-tab="tab-ci">CI / GitHub Actions</button>
+        <button class="tab-btn" data-tab="tab-api">API</button>
+      </div>
+
+      <!-- Badge tab -->
+      <div class="tab-pane active" id="tab-badge">
+        <p class="tab-desc">Add a live score badge to your README that updates every time you push.</p>
+        <div class="badge-preview-row">
+          <img id="badge-preview" class="badge-img" src="https://img.shields.io/badge/misconfig-A%20%E2%80%A2%2094-22c55e?style=flat-square&logo=terraform" alt="Misconfig score badge preview">
+          <span class="badge-caption">Live badge once you're connected</span>
+        </div>
+        <p class="snippet-label">Markdown</p>
+        <div class="code-block">
+          <code id="badge-md">![Misconfig Score](https://api.misconfig.dev/badge/YOUR_ORG/YOUR_REPO)</code>
+          <button class="copy-btn" data-target="badge-md">Copy</button>
+        </div>
+        <p class="snippet-label">Badge URL</p>
+        <div class="code-block">
+          <code id="badge-url">https://api.misconfig.dev/badge/YOUR_ORG/YOUR_REPO</code>
+          <button class="copy-btn" data-target="badge-url">Copy</button>
+        </div>
+      </div>
+
+      <!-- CI tab -->
+      <div class="tab-pane" id="tab-ci">
+        <p class="tab-desc">Drop this workflow into <code class="inline-code">.github/workflows/</code> to gate every pull request on your misconfig score.</p>
+        <p class="snippet-label">.github/workflows/misconfig-index.yml</p>
+        <div class="code-block code-block--tall">
+          <code id="ci-yaml">name: Misconfig Index
+
+on:
+  push:
+    paths: ['**.tf', '**.yaml', '**.yml', '**/Dockerfile']
+  pull_request:
+    paths: ['**.tf', '**.yaml', '**.yml', '**/Dockerfile']
+
+env:
+  MIN_SCORE: 60
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install misconfig-index
+      - name: Scan IaC
+        env:
+          MISCONFIG_API_KEY: ${{ secrets.MISCONFIG_API_KEY }}
+        run: |
+          python -m scanner.ci_ingest \
+            --path . \
+            --repo "${{ github.repository }}" \
+            --branch "${{ github.ref_name }}" \
+            --commit "${{ github.sha }}" \
+            --min-score $MIN_SCORE</code>
+          <button class="copy-btn" data-target="ci-yaml">Copy</button>
+        </div>
+        <ol class="steps-list">
+          <li>Add <code class="inline-code">MISCONFIG_API_KEY</code> to your repository secrets.</li>
+          <li>Commit the workflow file — the scanner runs on every IaC change.</li>
+          <li>Adjust <code class="inline-code">MIN_SCORE</code> to set your quality gate threshold.</li>
+        </ol>
+      </div>
+
+      <!-- API tab -->
+      <div class="tab-pane" id="tab-api">
+        <p class="tab-desc">Use the REST API to ingest scans programmatically or build your own integrations.</p>
+
+        <p class="snippet-label">Create an organisation</p>
+        <div class="code-block">
+          <code id="api-org">curl -X POST https://api.misconfig.dev/v1/orgs \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Acme","slug":"acme"}'</code>
+          <button class="copy-btn" data-target="api-org">Copy</button>
+        </div>
+
+        <p class="snippet-label">Ingest a scan result</p>
+        <div class="code-block">
+          <code id="api-ingest">curl -X POST https://api.misconfig.dev/v1/ingest \
+  -H "X-API-Key: mi_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repo": "github.com/acme/infra",
+    "branch": "main",
+    "commit_sha": "abc123",
+    "total_files_scanned": 42,
+    "findings": [...]
+  }'</code>
+          <button class="copy-btn" data-target="api-ingest">Copy</button>
+        </div>
+
+        <p class="snippet-label">Get repo score history</p>
+        <div class="code-block">
+          <code id="api-history">curl https://api.misconfig.dev/v1/repos/1/history \
+  -H "X-API-Key: mi_YOUR_KEY"</code>
+          <button class="copy-btn" data-target="api-history">Copy</button>
+        </div>
+
+        <p class="api-docs-note">
+          Full interactive API reference available at
+          <a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">api.misconfig.dev/docs</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

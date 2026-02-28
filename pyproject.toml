@@ -1,0 +1,75 @@
+[project]
+name = "misconfig-index"
+version = "0.2.0"
+description = "IaC misconfiguration scanner — score, track, and benchmark cloud security posture."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Misconfig Index", email = "hello@misconfig.dev" }]
+requires-python = ">=3.11"
+keywords = ["security", "iac", "terraform", "kubernetes", "devsecops", "misconfiguration"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# ── Core CLI deps (lean — no DB, no web framework) ─────────────────────────
+# `pip install misconfig-index` gives you `misconfig scan` and `misconfig ingest`.
+# For the self-hosted server, use: pip install misconfig-index[server]
+dependencies = [
+    "click>=8.0.0",
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+# Full self-hosted server stack (FastAPI + PostgreSQL + Alembic)
+server = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.24.0",
+    "sqlalchemy>=2.0.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.0.0",
+    "psycopg2-binary>=2.9.0",
+    "alembic>=1.13.0",
+    "slowapi>=0.1.9",
+]
+# Development / testing
+dev = [
+    "pytest>=7.0",
+    "httpx>=0.25.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage      = "https://misconfig.dev"
+Repository    = "https://github.com/misconfig-index/misconfig-index"
+Documentation = "https://misconfig.dev/docs"
+"Bug Tracker" = "https://github.com/misconfig-index/misconfig-index/issues"
+
+# ── CLI entry point ─────────────────────────────────────────────────────────
+# After `pip install misconfig-index`, users get the `misconfig` command.
+[project.scripts]
+misconfig = "scanner.cmd:cli"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+# ── Package discovery ────────────────────────────────────────────────────────
+# Automatically finds scanner, scanner.rules, backend, backend.routers, etc.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scanner*", "backend*"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100

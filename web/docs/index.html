@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — Misconfig Index</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link active">Docs</a>
+        <a href="/blog/" class="nav-link">Blog</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero hero--slim">
+    <div class="hero-content">
+      <h1>Documentation</h1>
+      <p class="tagline">Everything you need to scan, score, and track your IaC security posture.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="docs-layout">
+
+      <!-- Sticky sidebar TOC -->
+      <aside class="docs-toc">
+        <h3>On this page</h3>
+        <ul class="toc-list">
+          <li><a href="#quick-start">Quick Start</a></li>
+          <li><a href="#ci-cd">CI / GitHub Actions</a></li>
+          <li><a href="#badges">Score Badges</a></li>
+          <li><a href="#cli">CLI Reference</a></li>
+          <li><a href="#api">REST API</a></li>
+          <li><a href="#scoring">Scoring</a></li>
+          <li><a href="#supported-iac">Supported IaC</a></li>
+          <li><a href="#self-hosting">Self-Hosting</a></li>
+        </ul>
+      </aside>
+
+      <!-- Main content panel -->
+      <div class="docs-content">
+
+        <!-- ── Quick Start ── -->
+        <h2 id="quick-start">Quick Start</h2>
+
+        <h3>Install</h3>
+        <div class="code-block">
+          <code id="c-install">pip install misconfig-index</code>
+          <button class="copy-btn" data-target="c-install">Copy</button>
+        </div>
+
+        <h3>Scan a directory</h3>
+        <p>Point the scanner at any directory containing Terraform, Kubernetes, CloudFormation, or Dockerfile files:</p>
+        <div class="code-block">
+          <code id="c-scan">misconfig scan --path ./infra</code>
+          <button class="copy-btn" data-target="c-scan">Copy</button>
+        </div>
+
+        <p>Example output:</p>
+        <div class="code-block">
+          <code>Scanning /home/user/infra …
+
+────────────────────────────────────────
+  Misconfig Score: 76/100  (Grade B)
+────────────────────────────────────────
+  Category breakdown:
+    networking     ████████░░  80/100
+    identity       ███████░░░  70/100
+    storage        █████████░  90/100
+    workload       ███████░░░  72/100
+────────────────────────────────────────</code>
+        </div>
+
+        <h3>JSON output</h3>
+        <div class="code-block">
+          <code id="c-json">misconfig scan --path ./infra --output json | jq '.score'</code>
+          <button class="copy-btn" data-target="c-json">Copy</button>
+        </div>
+
+        <!-- ── CI/CD ── -->
+        <h2 id="ci-cd">CI / GitHub Actions</h2>
+
+        <p>Gate every pull request on your Misconfig Score in three steps:</p>
+        <ol>
+          <li>Get an API key — create an org via <code class="inline-code">POST /v1/orgs</code>, then <code class="inline-code">POST /v1/orgs/{id}/keys</code>.</li>
+          <li>Add <code class="inline-code">MISCONFIG_API_KEY</code> to your repo secrets: <strong>Settings → Secrets → Actions → New repository secret</strong>.</li>
+          <li>Drop this file into your repo:</li>
+        </ol>
+
+        <p class="snippet-label">.github/workflows/misconfig-index.yml</p>
+        <div class="code-block code-block--tall">
+          <code id="c-workflow">name: Misconfig Index
+
+on:
+  push:
+    branches: [main, master]
+    paths: ['**.tf', '**.yaml', '**.yml', '**/Dockerfile']
+  pull_request:
+    paths: ['**.tf', '**.yaml', '**.yml', '**/Dockerfile']
+
+env:
+  MISCONFIG_API_URL: https://api.misconfig.dev
+  MIN_SCORE: 60
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install misconfig-index
+      - name: Scan IaC
+        env:
+          MISCONFIG_API_KEY: ${{ secrets.MISCONFIG_API_KEY }}
+        run: |
+          misconfig ingest \
+            --path . \
+            --repo "${{ github.repository }}" \
+            --branch "${{ github.ref_name }}" \
+            --commit "${{ github.sha }}" \
+            --min-score $MIN_SCORE</code>
+          <button class="copy-btn" data-target="c-workflow">Copy</button>
+        </div>
+
+        <p>Exit codes: <code class="inline-code">0</code> success · <code class="inline-code">1</code> below threshold · <code class="inline-code">2</code> error.</p>
+
+        <div class="docs-callout">
+          <strong>Tip:</strong> Start with <code class="inline-code">MIN_SCORE: 60</code> (Grade C) and tighten it as your posture improves.
+        </div>
+
+        <!-- ── Badges ── -->
+        <h2 id="badges">Score Badges</h2>
+
+        <p>Add a live score badge to your README that updates on every push:</p>
+        <p class="snippet-label">Markdown</p>
+        <div class="code-block">
+          <code id="c-badge">![Misconfig Score](https://api.misconfig.dev/badge/YOUR_ORG/YOUR_REPO)</code>
+          <button class="copy-btn" data-target="c-badge">Copy</button>
+        </div>
+        <p>Badges are grade-coloured (🟢 A/B · 🟡 C · 🔴 D/F) and cached for 5 minutes.</p>
+
+        <!-- ── CLI ── -->
+        <h2 id="cli">CLI Reference</h2>
+
+        <h3>misconfig scan</h3>
+        <table class="docs-table">
+          <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--path, -p</code></td><td><code>.</code></td><td>Directory to scan</td></tr>
+            <tr><td><code>--output, -o</code></td><td><code>table</code></td><td><code>table</code> or <code>json</code></td></tr>
+            <tr><td><code>--save</code></td><td>off</td><td>Persist to local DB (requires <code>DATABASE_URL</code>)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>misconfig ingest</h3>
+        <table class="docs-table">
+          <thead><tr><th>Option</th><th>Env var</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--path, -p</code></td><td>—</td><td>Directory to scan</td></tr>
+            <tr><td><code>--repo, -r</code></td><td>—</td><td>e.g. <code>github.com/org/repo</code></td></tr>
+            <tr><td><code>--api-key</code></td><td><code>MISCONFIG_API_KEY</code></td><td>API key (prefix <code>mi_</code>)</td></tr>
+            <tr><td><code>--api-url</code></td><td><code>MISCONFIG_API_URL</code></td><td>API base URL</td></tr>
+            <tr><td><code>--branch</code></td><td><code>MISCONFIG_BRANCH</code></td><td>Git branch name</td></tr>
+            <tr><td><code>--commit</code></td><td><code>MISCONFIG_COMMIT</code></td><td>Git commit SHA</td></tr>
+            <tr><td><code>--min-score</code></td><td>—</td><td>Exit 1 if score falls below this</td></tr>
+            <tr><td><code>--dry-run</code></td><td>off</td><td>Print payload without posting</td></tr>
+          </tbody>
+        </table>
+
+        <h3>misconfig serve</h3>
+        <table class="docs-table">
+          <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--host</code></td><td><code>127.0.0.1</code></td><td>Bind host</td></tr>
+            <tr><td><code>--port</code></td><td><code>8000</code></td><td>Bind port</td></tr>
+            <tr><td><code>--workers</code></td><td><code>1</code></td><td>Uvicorn workers</td></tr>
+            <tr><td><code>--reload</code></td><td>off</td><td>Auto-reload (dev mode)</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ── API ── -->
+        <h2 id="api">REST API</h2>
+
+        <p>Full interactive reference at <a href="https://api.misconfig.dev/docs" target="_blank">api.misconfig.dev/docs</a>. Key endpoints:</p>
+
+        <h3>Create an organisation</h3>
+        <div class="code-block">
+          <code>curl -X POST https://api.misconfig.dev/v1/orgs \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Acme", "slug": "acme"}'</code>
+        </div>
+
+        <h3>Create an API key</h3>
+        <div class="code-block">
+          <code>curl -X POST https://api.misconfig.dev/v1/orgs/{id}/keys \
+  -H "Content-Type: application/json" \
+  -d '{"name": "ci-prod"}'
+# Returns the full key (mi_…) — save it immediately.</code>
+        </div>
+
+        <h3>Ingest a scan</h3>
+        <div class="code-block">
+          <code>curl -X POST https://api.misconfig.dev/v1/ingest \
+  -H "X-API-Key: mi_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repo": "github.com/acme/infra",
+    "branch": "main",
+    "commit_sha": "abc123",
+    "total_files_scanned": 42,
+    "findings": [...]
+  }'</code>
+        </div>
+
+        <h3>Get score history</h3>
+        <div class="code-block">
+          <code>curl https://api.misconfig.dev/v1/repos/{id}/history \
+  -H "X-API-Key: mi_YOUR_KEY"</code>
+        </div>
+
+        <!-- ── Scoring ── -->
+        <h2 id="scoring">Scoring Explained</h2>
+
+        <p>Findings are weighted by severity and normalised by files scanned:</p>
+        <table class="docs-table">
+          <thead><tr><th>Severity</th><th>Weight</th></tr></thead>
+          <tbody>
+            <tr><td>Critical</td><td>10</td></tr>
+            <tr><td>High</td><td>5</td></tr>
+            <tr><td>Medium</td><td>2</td></tr>
+            <tr><td>Low</td><td>1</td></tr>
+          </tbody>
+        </table>
+
+        <div class="code-block">
+          <code>score = clamp(0, 100 − (Σ weights / files_scanned) × 10)</code>
+        </div>
+
+        <table class="docs-table">
+          <thead><tr><th>Grade</th><th>Score</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td>≥ 90</td></tr>
+            <tr><td>B</td><td>≥ 75</td></tr>
+            <tr><td>C</td><td>≥ 60</td></tr>
+            <tr><td>D</td><td>≥ 40</td></tr>
+            <tr><td>F</td><td>&lt; 40</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ── Supported IaC ── -->
+        <h2 id="supported-iac">Supported IaC</h2>
+
+        <table class="docs-table">
+          <thead><tr><th>Type</th><th>Detected by</th><th>Rule categories</th></tr></thead>
+          <tbody>
+            <tr><td>Terraform</td><td><code>.tf</code></td><td>networking, identity, storage, database</td></tr>
+            <tr><td>Kubernetes</td><td><code>.yaml</code> / <code>.yml</code></td><td>workload, storage, image</td></tr>
+            <tr><td>CloudFormation</td><td><code>AWSTemplateFormatVersion</code> in YAML</td><td>networking, storage</td></tr>
+            <tr><td>Dockerfile</td><td>filename <code>Dockerfile</code></td><td>image</td></tr>
+          </tbody>
+        </table>
+
+        <!-- ── Self-Hosting ── -->
+        <h2 id="self-hosting">Self-Hosting</h2>
+
+        <div class="code-block code-block--tall">
+          <code># 1. Clone and configure
+git clone https://github.com/misconfig-index/misconfig-index
+cd misconfig-index
+cp .env.example .env
+# edit .env → set POSTGRES_PASSWORD, ENVIRONMENT=production
+
+# 2. Start the full stack
+docker compose up -d
+
+# 3. Open the dashboard
+open http://localhost</code>
+        </div>
+
+        <h3>Environment variables</h3>
+        <table class="docs-table">
+          <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>POSTGRES_PASSWORD</code></td><td><em>required</em></td><td>PostgreSQL password</td></tr>
+            <tr><td><code>ENVIRONMENT</code></td><td><code>development</code></td><td><code>development</code> or <code>production</code></td></tr>
+            <tr><td><code>API_WORKERS</code></td><td><code>2</code></td><td>Uvicorn worker count</td></tr>
+            <tr><td><code>CORS_ORIGINS</code></td><td><code>*</code></td><td>Allowed origins — restrict in production</td></tr>
+            <tr><td><code>WEB_PORT</code></td><td><code>80</code></td><td>Host port for nginx</td></tr>
+          </tbody>
+        </table>
+
+        <div class="docs-callout">
+          <strong>Production tip:</strong> Set <code class="inline-code">CORS_ORIGINS=https://yourdomain.com</code> and terminate SSL with Let's Encrypt. See the <a href="/blog/introducing-misconfig-index.html">launch post</a> for a full walkthrough.
+        </div>
+
+      </div><!-- /docs-content -->
+    </div><!-- /docs-layout -->
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll(".copy-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = document.getElementById(btn.dataset.target);
+        if (!el) return;
+        navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = "Copied!";
+          btn.classList.add("copied");
+          setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1800);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

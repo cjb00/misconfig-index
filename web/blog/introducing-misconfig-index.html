@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introducing Misconfig Index — Blog</title>
+  <meta name="description" content="Misconfig Index scans Terraform, Kubernetes, and Dockerfile IaC and converts findings into a single weighted security score you can track over time and gate in CI.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/blog/" class="nav-link active">Blog</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero hero--slim">
+    <div class="hero-content">
+      <span class="post-tag" style="margin-bottom: 14px; display: inline-block;">Launch</span>
+      <h1>Introducing Misconfig Index</h1>
+      <p class="tagline">Score and track your IaC security posture over time.</p>
+      <p style="margin: 8px 0 0; font-size: 13px; color: #4a5568;">February 28, 2026 · 5 min read</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="article-panel article-body">
+
+      <p>IaC misconfigurations are the leading cause of cloud security incidents. Open security groups, public S3 buckets, containers running as root, secrets baked into manifests — these aren't exotic attack techniques. They're mundane configuration errors that slip through code review every day.</p>
+
+      <p>The tools to <em>find</em> these issues exist. Checkov, tfsec, Trivy — they're all good. The problem is that raw lists of findings are hard to act on at scale. Is your codebase getting better or worse over time? How do you compare across teams? How do you set a quality gate that doesn't just block every merge?</p>
+
+      <p>Today we're launching <strong>Misconfig Index</strong> to answer those questions.</p>
+
+      <h2>What it does</h2>
+
+      <p>Misconfig Index scans Terraform, Kubernetes, CloudFormation, and Dockerfile IaC, applies rule packs, and converts findings into a single weighted <strong>Misconfig Score</strong> (0–100, graded A–F). Scores are stored over time so you can see your security posture improving — or catch regressions before they reach production.</p>
+
+      <p>In one command:</p>
+
+      <pre><code>$ pip install misconfig-index
+$ misconfig scan --path ./infra
+
+────────────────────────────────────────
+  Misconfig Score: 76/100  (Grade B)
+────────────────────────────────────────
+  Category breakdown:
+    networking     ████████░░  80/100
+    identity       ███████░░░  70/100
+    storage        █████████░  90/100
+    workload       ███████░░░  72/100
+────────────────────────────────────────</code></pre>
+
+      <h2>The scoring model</h2>
+
+      <p>Findings are weighted by severity (critical: 10, high: 5, medium: 2, low: 1) and normalised by the number of files scanned, so a small repo with one finding doesn't automatically score worse than a large one with fifty.</p>
+
+      <pre><code>score = clamp(0, 100 − (Σ weights / files_scanned) × 10)</code></pre>
+
+      <p>This gives you a number that's stable enough to track week-over-week without panicking when a new rule is added, but sensitive enough to catch real regressions.</p>
+
+      <h2>CI integration in three steps</h2>
+
+      <p>The main use case is gating pull requests. Add your API key as a repository secret, drop in a workflow file, and every IaC change gets scored automatically:</p>
+
+      <pre><code>- name: Scan IaC
+  env:
+    MISCONFIG_API_KEY: ${{ secrets.MISCONFIG_API_KEY }}
+  run: |
+    misconfig ingest \
+      --path . \
+      --repo "${{ github.repository }}" \
+      --branch "${{ github.ref_name }}" \
+      --commit "${{ github.sha }}" \
+      --min-score 60</code></pre>
+
+      <p>The scanner exits <code>0</code> on success, <code>1</code> if the score drops below your threshold, and <code>2</code> on error. GitHub fails the check automatically.</p>
+
+      <h2>Live badges</h2>
+
+      <p>Add a live score badge to your README that updates on every push:</p>
+
+      <pre><code>![Misconfig Score](https://api.misconfig.dev/badge/YOUR_ORG/YOUR_REPO)</code></pre>
+
+      <p>Badges are grade-coloured (green for A/B, yellow for C, red for D/F) and cached for five minutes.</p>
+
+      <h2>The benchmark</h2>
+
+      <p>The dashboard includes an industry benchmark — grade distribution, category averages, and the most common misconfigurations across all repos that have been scanned. As more teams connect, this becomes a real signal: you can see how your posture compares to the field and prioritise accordingly.</p>
+
+      <h2>Self-hostable</h2>
+
+      <p>If you can't send IaC data to a third-party service (and many of you can't), the full stack — FastAPI backend, PostgreSQL, nginx — is one <code>docker compose up</code> away. The same scanner, the same API, running in your own infrastructure.</p>
+
+      <h2>What's next</h2>
+
+      <ul>
+        <li><strong>More rules</strong> — Pulumi HCL, Ansible, Bicep, ARM templates</li>
+        <li><strong>Slack / PagerDuty alerts</strong> — notify on score drops</li>
+        <li><strong>Team features</strong> — multi-org, SSO, shared dashboards</li>
+        <li><strong>Rule customisation</strong> — suppress false positives, write custom rules</li>
+        <li><strong>PR comments</strong> — post the score directly on the pull request</li>
+      </ul>
+
+      <h2>Try it now</h2>
+
+      <p>Misconfig Index is free and open source under the MIT license. Self-host it or use the hosted version at <a href="https://misconfig.dev">misconfig.dev</a>.</p>
+
+      <pre><code>pip install misconfig-index
+misconfig scan --path ./infra</code></pre>
+
+      <p>If you find bugs, have feedback, or want to contribute a rule — <a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">open an issue on GitHub</a>. We read everything.</p>
+
+    </div>
+
+    <div class="panel" style="text-align: center; padding: 32px 24px;">
+      <h3 style="margin: 0 0 8px 0; font-size: 18px;">Ready to score your infrastructure?</h3>
+      <p style="color: #9aa5b8; margin: 0 0 20px 0; font-size: 14px;">Get started in 60 seconds — no account required for a local scan.</p>
+      <a href="/docs/" class="btn-primary">Read the docs</a>
+      <a href="/" class="btn-secondary">View dashboard</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+</body>
+</html>
