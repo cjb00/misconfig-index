@@ -155,9 +155,9 @@ def github_callback(request: Request, code: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    # 4. Issue JWT and redirect to frontend dashboard
+    # 4. Issue JWT and redirect to frontend (root page picks up token from URL)
     token = _make_jwt(user.id, user.github_login)
-    redirect_url = f"{settings.FRONTEND_URL}/dashboard/?token={token}"
+    redirect_url = f"{settings.FRONTEND_URL}/?token={token}"
     return RedirectResponse(redirect_url)
 
 
