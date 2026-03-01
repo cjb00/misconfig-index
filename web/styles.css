@@ -709,6 +709,115 @@ a.blog-row:hover .blog-row-title { color: #e8ecf2; }
   font-size: 40px;
 }
 
+/* ── Landing page hero (homepage) ────────────────────────────────────────── */
+
+.hero--landing {
+  padding: 80px 24px 64px;
+  text-align: left;
+}
+
+.hero--landing .hero-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.hero--landing h1 {
+  font-size: 46px;
+  line-height: 1.12;
+  letter-spacing: -1.5px;
+  margin: 0 0 18px 0;
+  color: #f0f4ff;
+}
+
+@media (max-width: 640px) {
+  .hero--landing h1 { font-size: 32px; letter-spacing: -0.5px; }
+}
+
+.hero-sub {
+  color: #8fa0bb;
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0 0 36px 0;
+  max-width: 580px;
+}
+
+/* Quick Scan form sitting in the hero */
+.hero-qs-form {
+  margin-bottom: 0 !important;
+  max-width: 620px;
+}
+
+.hero-qs-form .qs-input {
+  font-size: 15px;
+  padding: 12px 14px;
+}
+
+.hero-qs-form .qs-btn {
+  font-size: 15px;
+  padding: 12px 24px;
+}
+
+/* Loading / error states inside the hero */
+.hero--landing .qs-loading,
+.hero--landing .qs-error {
+  max-width: 620px;
+  margin-top: 10px;
+}
+
+/* Ensure [hidden] is respected even when display is set by other rules */
+[hidden] { display: none !important; }
+
+/* Privacy reassurance line */
+.hero-privacy {
+  font-size: 12px;
+  color: #374151;
+  margin: 12px 0 20px 0;
+  max-width: 620px;
+}
+
+.hero-privacy a {
+  color: #4a5568;
+  text-decoration: none;
+}
+
+.hero-privacy a:hover { color: #9aa5b8; text-decoration: underline; }
+
+/* Secondary CTAs row (pip install + Get API Key) */
+.hero-ctas {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hero-install-cmd {
+  background: #161d2b;
+  border: 1px solid #2d3a50;
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  color: #a5b4fc;
+  letter-spacing: 0.2px;
+  user-select: all;
+  cursor: text;
+}
+
+.hero-or {
+  color: #374151;
+  font-size: 13px;
+}
+
+.hero-signup-link {
+  color: #6366f1;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.hero-signup-link:hover { color: #818cf8; }
+
 /* Slim hero variant for inner pages (docs, blog, pricing) */
 .hero--slim {
   padding: 40px 24px 36px;
@@ -1681,4 +1790,341 @@ ul {
   font-size: 14px;
   padding: 8px 0;
   list-style: none;
+}
+
+/* ── Quick Scan result panel (standalone, top of main) ───────────────────── */
+
+.qs-result-panel {
+  padding: 24px;
+  border-color: #2d3a54;
+  scroll-margin-top: 72px; /* offset for sticky nav */
+}
+
+.qs-result-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.qs-result-title {
+  margin: 0;
+  font-size: 18px;
+  color: #e8ecf2;
+  flex-shrink: 0;
+}
+
+.qs-result-repo {
+  font-family: monospace;
+  font-size: 13px;
+  color: #6366f1;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qs-clear-btn {
+  background: none;
+  border: 1px solid #2a3347;
+  border-radius: 5px;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 10px;
+  margin-left: auto;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.qs-clear-btn:hover { border-color: #4a5568; color: #9aa5b8; }
+
+/* CTA row at the bottom of the result panel */
+.qs-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #1f2534;
+  flex-wrap: wrap;
+}
+
+.qs-cta-note {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ── Footer privacy note ─────────────────────────────────────────────────── */
+
+.footer-privacy-note {
+  font-size: 12px;
+  color: #374151;
+  margin: 8px 0 0 0;
+  line-height: 1.5;
+}
+
+.footer-privacy-note a {
+  color: #4a5568;
+  text-decoration: none;
+}
+
+.footer-privacy-note a:hover { color: #9aa5b8; }
+
+/* ── Sign-up / Get API Key page ──────────────────────────────────────────── */
+
+.signup-layout {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 0 16px 64px;
+}
+
+.signup-card {
+  background: #151922;
+  border: 1px solid #1f2534;
+  border-radius: 12px;
+  padding: 36px 32px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+
+.signup-card h2 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  color: #e8ecf2;
+}
+
+.signup-card .signup-intro {
+  color: #9aa5b8;
+  font-size: 14px;
+  margin: 0 0 28px 0;
+  line-height: 1.6;
+}
+
+.signup-field {
+  margin-bottom: 16px;
+}
+
+.signup-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9aa5b8;
+  margin-bottom: 6px;
+}
+
+.signup-field input {
+  width: 100%;
+  background: #0f1115;
+  border: 1px solid #2d3548;
+  border-radius: 7px;
+  color: #e8ecf2;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.signup-field input:focus { border-color: #4f6bff; }
+.signup-field input::placeholder { color: #374151; }
+
+.signup-field .field-hint {
+  font-size: 12px;
+  color: #374151;
+  margin: 5px 0 0 0;
+}
+
+.signup-submit {
+  width: 100%;
+  background: #4f6bff;
+  border: none;
+  border-radius: 7px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px;
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+
+.signup-submit:hover { background: #3d56e0; }
+.signup-submit:disabled { background: #2d3548; cursor: not-allowed; }
+
+.signup-error {
+  background: #2a1414;
+  border: 1px solid #6b2323;
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 13px;
+  padding: 10px 12px;
+  margin-top: 14px;
+}
+
+/* API key result box */
+.apikey-result {
+  margin-top: 24px;
+  background: #0d1a0f;
+  border: 1px solid #166534;
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.apikey-result h3 {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  color: #86efac;
+}
+
+.apikey-result .apikey-warn {
+  font-size: 12px;
+  color: #4ade80;
+  margin: 0 0 16px 0;
+}
+
+.apikey-box {
+  background: #0f1115;
+  border: 1px solid #1f2d1f;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.apikey-value {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  color: #86efac;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+}
+
+.apikey-copy {
+  background: #1c2331;
+  border: 1px solid #2a3347;
+  border-radius: 5px;
+  color: #9aa5b8;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px 12px;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.apikey-copy:hover { background: #242e44; color: #e8ecf2; }
+.apikey-copy.copied { background: #166534; border-color: #22c55e; color: #86efac; }
+
+.apikey-next-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apikey-next-steps li {
+  font-size: 13px;
+  color: #9aa5b8;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.apikey-next-steps li::before {
+  content: "→";
+  color: #4f6bff;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.apikey-next-steps a { color: #818cf8; text-decoration: none; }
+.apikey-next-steps a:hover { text-decoration: underline; }
+
+.signup-divider {
+  border: none;
+  border-top: 1px solid #1f2534;
+  margin: 24px 0;
+}
+
+/* ── Privacy / Legal pages ───────────────────────────────────────────────── */
+
+.legal-layout {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 64px;
+}
+
+.legal-content {
+  background: #151922;
+  border: 1px solid #1f2534;
+  border-radius: 10px;
+  padding: 36px 40px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 600px) {
+  .legal-content { padding: 24px 20px; }
+  .signup-card { padding: 28px 20px; }
+}
+
+.legal-content h2 {
+  font-size: 20px;
+  margin: 36px 0 10px 0;
+  color: #e8ecf2;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #1f2534;
+  scroll-margin-top: 72px;
+}
+
+.legal-content h2:first-child { margin-top: 0; }
+
+.legal-content p {
+  color: #c5ccda;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 14px 0;
+}
+
+.legal-content ul {
+  color: #c5ccda;
+  font-size: 15px;
+  padding-left: 20px;
+  margin: 0 0 14px 0;
+  line-height: 1.7;
+}
+
+.legal-content li { margin-bottom: 6px; }
+
+.legal-content a { color: #818cf8; text-decoration: none; }
+.legal-content a:hover { text-decoration: underline; }
+
+.legal-content strong { color: #e8ecf2; }
+
+.legal-effective {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 28px;
+}
+
+.legal-highlight {
+  background: #131b2e;
+  border: 1px solid #1d3461;
+  border-left: 3px solid #4f6bff;
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: #c5ccda;
+  line-height: 1.6;
 }

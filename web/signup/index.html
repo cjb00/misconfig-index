@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get API Key — Misconfig Index</title>
+  <meta name="description" content="Create a free Misconfig Index organisation and get an API key to start tracking your IaC security score.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/blog/" class="nav-link">Blog</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+        <a href="/signup/" class="nav-link active">Get API Key</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero hero--slim">
+    <div class="hero-content">
+      <h1>Get your API key</h1>
+      <p class="tagline">Create a free organisation and start tracking your IaC security score.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="signup-layout">
+      <div class="signup-card">
+        <h2>Create organisation</h2>
+        <p class="signup-intro">
+          Enter your organisation name below. We'll create an account and issue an API key instantly —
+          no email or password required.
+        </p>
+
+        <form id="signup-form" autocomplete="off">
+          <div class="signup-field">
+            <label for="org-name">Organisation name</label>
+            <input
+              type="text"
+              id="org-name"
+              name="org-name"
+              placeholder="Acme Corp"
+              maxlength="80"
+              required
+            >
+          </div>
+
+          <div class="signup-field">
+            <label for="org-slug">Slug <span style="font-weight:400;color:#64748b">(used in badge URLs)</span></label>
+            <input
+              type="text"
+              id="org-slug"
+              name="org-slug"
+              placeholder="acme"
+              maxlength="40"
+              pattern="[a-z0-9\-]+"
+              required
+            >
+            <p class="field-hint">Lowercase letters, numbers, and hyphens only.</p>
+          </div>
+
+          <button type="submit" class="signup-submit" id="signup-btn">
+            Create org &amp; get API key →
+          </button>
+
+          <div class="signup-error" id="signup-error" hidden></div>
+        </form>
+
+        <!-- API key result (shown after successful creation) -->
+        <div class="apikey-result" id="apikey-result" hidden>
+          <h3>✓ Your API key</h3>
+          <p class="apikey-warn">⚠ Save this key now — it won't be shown again.</p>
+
+          <div class="apikey-box">
+            <span class="apikey-value" id="apikey-value"></span>
+            <button class="apikey-copy" id="apikey-copy">Copy</button>
+          </div>
+
+          <p style="font-size:13px;color:#9aa5b8;margin:0 0 14px 0">
+            Org ID: <strong id="org-id-display" style="color:#e8ecf2;font-family:monospace"></strong>
+          </p>
+
+          <hr class="signup-divider">
+
+          <p style="font-size:13px;font-weight:600;color:#c5ccda;margin:0 0 10px 0">Next steps</p>
+          <ul class="apikey-next-steps">
+            <li>
+              Add your key as <code style="font-size:12px;background:#1c2331;padding:1px 5px;border-radius:3px;color:#a5b4fc">MISCONFIG_API_KEY</code>
+              in your GitHub repository secrets.
+            </li>
+            <li>
+              <a href="/docs/#ci-github-actions">Add the CI workflow</a> to start ingesting scan results automatically.
+            </li>
+            <li>
+              <a href="/docs/#badges">Add a badge</a> to your README to show your live score.
+            </li>
+            <li>
+              Read the <a href="/docs/">full documentation</a> for CLI usage, API reference, and self-hosting.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- What you get section -->
+      <div class="panel" style="margin-top:20px">
+        <h2 style="font-size:16px;margin-top:0">What's included (Free tier)</h2>
+        <ul style="margin:0;color:#9aa5b8;font-size:14px;line-height:1.8">
+          <li>Unlimited scans via <code style="font-size:12px;background:#1c2331;padding:1px 5px;border-radius:3px;color:#a5b4fc">misconfig ingest</code></li>
+          <li>Score trend history (last 90 days)</li>
+          <li>Live badge for your README</li>
+          <li>Community benchmark comparison</li>
+          <li>Terraform, Kubernetes, CloudFormation, and Dockerfile rules</li>
+          <li>Quick Scan for any public GitHub repo</li>
+        </ul>
+        <p style="margin:14px 0 0;font-size:13px;color:#64748b">
+          Need more? See <a href="/pricing/" style="color:#6366f1">pricing →</a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+        <p class="footer-privacy-note">We store only scores and rule IDs. No source code is ever retained. <a href="/privacy/">Privacy policy</a></p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy/">Privacy Policy</a></li>
+          <li><a href="/terms/">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = "https://api.misconfig.dev";
+
+    // Auto-generate slug from org name
+    document.getElementById("org-name").addEventListener("input", (e) => {
+      const slug = e.target.value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40);
+      document.getElementById("org-slug").value = slug;
+    });
+
+    document.getElementById("signup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("org-name").value.trim();
+      const slug = document.getElementById("org-slug").value.trim();
+      const btn = document.getElementById("signup-btn");
+      const errorEl = document.getElementById("signup-error");
+
+      if (!name || !slug) return;
+
+      errorEl.hidden = true;
+      btn.disabled = true;
+      btn.textContent = "Creating…";
+
+      try {
+        // Step 1: create org
+        const orgRes = await fetch(`${API_BASE}/v1/orgs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, slug }),
+        });
+
+        if (!orgRes.ok) {
+          const body = await orgRes.json().catch(() => ({}));
+          throw new Error(body.detail || `HTTP ${orgRes.status}`);
+        }
+
+        const org = await orgRes.json();
+        const orgId = org.id;
+
+        // Step 2: create API key
+        const keyRes = await fetch(`${API_BASE}/v1/orgs/${orgId}/keys`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ label: "default" }),
+        });
+
+        if (!keyRes.ok) {
+          const body = await keyRes.json().catch(() => ({}));
+          throw new Error(body.detail || `HTTP ${keyRes.status}`);
+        }
+
+        const keyData = await keyRes.json();
+
+        // Show result
+        document.getElementById("apikey-value").textContent = keyData.key;
+        document.getElementById("org-id-display").textContent = orgId;
+        document.getElementById("apikey-result").hidden = false;
+        document.getElementById("signup-form").hidden = true;
+
+        // Scroll to key
+        document.getElementById("apikey-result").scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Copy button
+        document.getElementById("apikey-copy").addEventListener("click", () => {
+          navigator.clipboard.writeText(keyData.key).then(() => {
+            const btn = document.getElementById("apikey-copy");
+            btn.textContent = "Copied!";
+            btn.classList.add("copied");
+            setTimeout(() => {
+              btn.textContent = "Copy";
+              btn.classList.remove("copied");
+            }, 2000);
+          });
+        });
+
+      } catch (err) {
+        errorEl.textContent = `Error: ${err.message}`;
+        errorEl.hidden = false;
+        btn.disabled = false;
+        btn.textContent = "Create org & get API key →";
+      }
+    });
+  </script>
+</body>
+</html>

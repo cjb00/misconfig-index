@@ -21,6 +21,11 @@ const SEVERITY_COLORS = {
   low: "#64748b",
 };
 
+// Valid GitHub repo URL pattern (client-side pre-check before hitting the API)
+// Accepts: github.com/owner/repo, https://github.com/owner/repo, owner/repo
+const GH_REPO_RE =
+  /^(https?:\/\/)?(www\.)?github\.com\/[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-]+(\/.*)?$|^[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-]+$/;
+
 // ── Score card ───────────────────────────────────────────────────────────────
 
 function renderScore(data) {
@@ -102,17 +107,6 @@ function renderStats(data) {
 
 // ── Trend sparkline ───────────────────────────────────────────────────────────
 
-/**
- * Renders an SVG trend line onto #trend-chart.
- * viewBox is 800×160 where y=0 → score 100, y=160 → score 0.
- *
- * Grade bands (matching SVG rect elements):
- *   A ≥ 90  → y: 0–16
- *   B ≥ 75  → y: 16–40
- *   C ≥ 60  → y: 40–64
- *   D ≥ 40  → y: 64–96
- *   F < 40  → y: 96–160
- */
 function renderSparkline(history) {
   const subtitleEl = document.getElementById("chart-subtitle");
   const axisEl = document.getElementById("chart-axis");
@@ -194,7 +188,6 @@ function renderSparkline(history) {
 
   // X-axis date labels
   axisEl.innerHTML = "";
-  // Show up to 6 evenly-spaced dates
   const step = Math.max(1, Math.floor(n / 6));
   const axisIndices = [];
   for (let i = 0; i < n; i += step) axisIndices.push(i);
@@ -204,7 +197,6 @@ function renderSparkline(history) {
   axisEl.style.justifyContent = "space-between";
   axisEl.style.padding = "0 0 0 30px";
 
-  // Build axis with positioned spans
   const axisPoints = axisIndices.map((idx) => history[idx]);
   axisPoints.forEach((entry) => {
     const span = document.createElement("span");
@@ -225,11 +217,9 @@ function initTabs() {
     if (!btn) return;
     const targetId = btn.dataset.tab;
 
-    // Deactivate all
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
     document.querySelectorAll(".tab-pane").forEach((p) => p.classList.remove("active"));
 
-    // Activate selected
     btn.classList.add("active");
     document.getElementById(targetId)?.classList.add("active");
   });
@@ -258,20 +248,13 @@ function initCopyButtons() {
 
 // ── Industry Benchmark ────────────────────────────────────────────────────────
 
-/**
- * Renders the public benchmark panel from /reports/benchmark.
- * @param {Object} data  PublicBenchmarkStats (or OrgBenchmarkStats)
- */
 function renderBenchmark(data) {
-  // Header stats
   document.getElementById("bm-repos").textContent = data.total_repos.toLocaleString();
   document.getElementById("bm-scans").textContent = data.total_scans.toLocaleString();
   document.getElementById("bm-avg").textContent   = data.industry_avg_score;
 
-  // Grade distribution stacked bar
   const dist = data.grade_distribution || {};
   const total = (dist.A || 0) + (dist.B || 0) + (dist.C || 0) + (dist.D || 0) + (dist.F || 0);
-
   const pct = (g) => total > 0 ? Math.max(0, ((dist[g] || 0) / total) * 100) : 0;
 
   ["A", "B", "C", "D", "F"].forEach((g) => {
@@ -279,7 +262,6 @@ function renderBenchmark(data) {
     if (el) el.style.width = `${pct(g)}%`;
   });
 
-  // Legend
   const legendEl = document.getElementById("grade-bar-legend");
   if (legendEl) {
     legendEl.innerHTML = ["A", "B", "C", "D", "F"]
@@ -292,7 +274,6 @@ function renderBenchmark(data) {
       .join("");
   }
 
-  // Category averages
   const catEl = document.getElementById("cat-avg-list");
   const catAvgs = data.category_averages || {};
   if (catEl) {
@@ -320,7 +301,6 @@ function renderBenchmark(data) {
     }
   }
 
-  // Top misconfigs
   const topEl = document.getElementById("top-misconfig-list");
   const topList = data.top_misconfigs || [];
   if (topEl) {
@@ -420,6 +400,10 @@ function renderQuickScanResult(data) {
   document.getElementById("qs-meta").textContent =
     `${data.total_files_scanned} files · ${data.total_findings} finding${data.total_findings !== 1 ? "s" : ""}`;
 
+  // Show repo name
+  const repoEl = document.getElementById("qs-result-repo");
+  if (repoEl) repoEl.textContent = data.repo || "";
+
   // Category breakdown
   const breakdownEl = document.getElementById("qs-breakdown");
   const entries = Object.entries(data.breakdown || {}).sort((a, b) => a[1] - b[1]);
@@ -456,9 +440,13 @@ function renderQuickScanResult(data) {
       .join("");
   }
 
-  // Show result, hide anything else
-  document.getElementById("qs-result").hidden = false;
+  // Show result panel, hide findings wrap if clean
+  const resultPanel = document.getElementById("qs-result");
+  resultPanel.hidden = false;
   document.getElementById("qs-findings-wrap").hidden = data.total_findings === 0;
+
+  // Scroll result into view smoothly
+  resultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function escapeHtml(str) {
@@ -473,21 +461,51 @@ function initQuickScan() {
   const form = document.getElementById("qs-form");
   if (!form) return;
 
+  // "Clear" button hides the result panel
+  const clearBtn = document.getElementById("qs-clear-btn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      const resultPanel = document.getElementById("qs-result");
+      if (resultPanel) resultPanel.hidden = true;
+      const input = document.getElementById("qs-input");
+      if (input) {
+        input.value = "";
+        input.focus();
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const input = document.getElementById("qs-input");
     const url = input.value.trim();
-    if (!url) return;
-
-    const btn = document.getElementById("qs-btn");
-    const loadingEl = document.getElementById("qs-loading");
     const errorEl = document.getElementById("qs-error");
-    const resultEl = document.getElementById("qs-result");
+    const loadingEl = document.getElementById("qs-loading");
+    const btn = document.getElementById("qs-btn");
 
-    // Reset state
-    btn.disabled = true;
-    resultEl.hidden = true;
+    // Always reset error state first
     errorEl.hidden = true;
+    errorEl.textContent = "";
+
+    // Guard: empty input — never show loading state
+    if (!url) {
+      errorEl.textContent = "Please enter a GitHub repository URL.";
+      errorEl.hidden = false;
+      return;
+    }
+
+    // Guard: invalid format — validate before touching loading state
+    if (!GH_REPO_RE.test(url)) {
+      errorEl.textContent =
+        "Please enter a valid GitHub repo URL, e.g. github.com/hashicorp/terraform";
+      errorEl.hidden = false;
+      return;
+    }
+
+    // Only reach here with a valid-looking URL — safe to show loading
+    btn.disabled = true;
     loadingEl.hidden = false;
 
     try {

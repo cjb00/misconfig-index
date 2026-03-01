@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Misconfig Index</title>
+  <title>Misconfig Index — IaC Security Score</title>
+  <meta name="description" content="Scan Terraform, Kubernetes, and CloudFormation for misconfigurations. Get a security score, track trends, and benchmark against the industry.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,21 +16,85 @@
         <a href="/docs/" class="nav-link">Docs</a>
         <a href="/blog/" class="nav-link">Blog</a>
         <a href="/pricing/" class="nav-link">Pricing</a>
+        <a href="/signup/" class="nav-link">Get API Key</a>
       </div>
       <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
     </div>
   </nav>
 
-  <header class="hero">
-    <div class="hero-content">
-      <h1>Misconfig Index</h1>
-      <p class="tagline">Cloud misconfigurations, measured at scale.</p>
-      <p class="lede">Scan Terraform and Kubernetes IaC, apply rule packs, and track your security posture over time.</p>
+  <!-- ── Landing hero with embedded Quick Scan ─────────────────────────── -->
+  <header class="hero hero--landing">
+    <div class="hero-inner">
+      <h1>Know your IaC security score<br>in 30&nbsp;seconds.</h1>
+      <p class="hero-sub">Paste any public GitHub repo — we'll scan it for Terraform, Kubernetes, and CloudFormation misconfigurations and return a score instantly.</p>
+
+      <!-- Quick Scan form (centrepiece CTA) -->
+      <form class="qs-form hero-qs-form" id="qs-form" autocomplete="off">
+        <input
+          type="text"
+          id="qs-input"
+          class="qs-input"
+          placeholder="github.com/owner/repo"
+          spellcheck="false"
+          aria-label="GitHub repository URL"
+        >
+        <button type="submit" class="qs-btn" id="qs-btn">Scan →</button>
+      </form>
+
+      <!-- Loading state -->
+      <div class="qs-loading" id="qs-loading" hidden>
+        <span class="qs-spinner"></span>
+        <span id="qs-loading-msg">Downloading &amp; scanning…</span>
+      </div>
+
+      <!-- Validation / error state -->
+      <div class="qs-error" id="qs-error" hidden></div>
+
+      <!-- Privacy reassurance -->
+      <p class="hero-privacy">
+        🔒 We store only scores and rule IDs — no source code is ever saved.
+        <a href="/privacy/">Privacy policy →</a>
+      </p>
+
+      <!-- Secondary CTAs -->
+      <div class="hero-ctas">
+        <code class="hero-install-cmd">pip install misconfig-index</code>
+        <span class="hero-or">·</span>
+        <a href="/signup/" class="hero-signup-link">Get API Key →</a>
+      </div>
     </div>
   </header>
 
   <main>
-    <!-- Score card -->
+    <!-- Quick Scan result (hidden until a scan completes) -->
+    <section class="panel qs-result-panel" id="qs-result" hidden>
+      <div class="qs-result-header">
+        <h2 class="qs-result-title">Scan Result</h2>
+        <span class="qs-result-repo" id="qs-result-repo"></span>
+        <button class="qs-clear-btn" id="qs-clear-btn">✕ Clear</button>
+      </div>
+      <div class="qs-score-row">
+        <div class="qs-circle" id="qs-circle">
+          <span class="qs-score-val" id="qs-score-val">—</span>
+          <span class="qs-score-sub">/ 100</span>
+        </div>
+        <div class="qs-score-details">
+          <div class="qs-grade" id="qs-grade"></div>
+          <div class="qs-meta" id="qs-meta"></div>
+          <div class="qs-breakdown" id="qs-breakdown"></div>
+        </div>
+      </div>
+      <div class="qs-findings-wrap" id="qs-findings-wrap">
+        <p class="qs-section-label">Top findings</p>
+        <ul class="qs-findings" id="qs-findings"></ul>
+      </div>
+      <div class="qs-cta-row">
+        <a href="/signup/" class="btn-primary">Track this repo →</a>
+        <span class="qs-cta-note">Get an API key to track score trends over time.</span>
+      </div>
+    </section>
+
+    <!-- Score card (your org's score, shown for registered users) -->
     <section class="panel score-panel">
       <div class="score-layout">
         <div class="score-circle-wrap">
@@ -40,8 +105,8 @@
           <div class="score-grade" id="score-grade"></div>
         </div>
         <div class="score-details">
-          <h2 class="score-heading">Misconfig Score</h2>
-          <p class="score-desc">Weighted security posture across all scanned IaC files. Higher is better.</p>
+          <h2 class="score-heading">Community Score</h2>
+          <p class="score-desc">Aggregate misconfig score across all repos tracked in the last 90 days. <a href="/signup/" style="color:#6366f1">Connect your repo →</a></p>
           <div class="score-breakdown" id="score-breakdown"></div>
         </div>
       </div>
@@ -55,19 +120,16 @@
       </div>
       <div class="chart-wrap">
         <svg id="trend-chart" class="trend-svg" viewBox="0 0 800 160" preserveAspectRatio="none">
-          <!-- Grade band backgrounds -->
           <rect class="band band-a" x="0" y="0"   width="800" height="16"/>
           <rect class="band band-b" x="0" y="16"  width="800" height="24"/>
           <rect class="band band-c" x="0" y="40"  width="800" height="24"/>
           <rect class="band band-d" x="0" y="64"  width="800" height="32"/>
           <rect class="band band-f" x="0" y="96"  width="800" height="64"/>
-          <!-- Grade labels -->
           <text class="band-label" x="6" y="12">A</text>
           <text class="band-label" x="6" y="32">B</text>
           <text class="band-label" x="6" y="56">C</text>
           <text class="band-label" x="6" y="84">D</text>
           <text class="band-label" x="6" y="130">F</text>
-          <!-- Dynamic path & dots injected by app.js -->
           <path id="trend-line" class="trend-line" d="" fill="none"/>
           <g id="trend-dots"></g>
           <g id="trend-labels"></g>
@@ -92,7 +154,6 @@
         </div>
       </div>
 
-      <!-- Grade distribution bar -->
       <div class="grade-dist-section">
         <p class="bm-section-label">Grade distribution</p>
         <div class="grade-bar-wrap">
@@ -108,15 +169,12 @@
       </div>
 
       <div class="benchmark-columns">
-        <!-- Category averages -->
         <div class="bm-col">
           <p class="bm-section-label">Category averages</p>
           <div class="cat-avg-list" id="cat-avg-list">
             <div class="bm-loading">Loading…</div>
           </div>
         </div>
-
-        <!-- Top misconfigs -->
         <div class="bm-col">
           <p class="bm-section-label">Most common misconfigs</p>
           <ol class="top-misconfig-list" id="top-misconfig-list">
@@ -126,52 +184,7 @@
       </div>
     </section>
 
-    <!-- Quick Scan -->
-    <section class="panel quickscan-panel" id="quickscan-panel">
-      <h2>Quick Scan</h2>
-      <p class="qs-desc">Paste any public GitHub repo URL — we'll download it, scan it, and return a score in seconds.</p>
-      <form class="qs-form" id="qs-form" autocomplete="off">
-        <input
-          type="text"
-          id="qs-input"
-          class="qs-input"
-          placeholder="github.com/owner/repo"
-          spellcheck="false"
-          aria-label="GitHub repository URL"
-        >
-        <button type="submit" class="qs-btn" id="qs-btn">Scan</button>
-      </form>
-
-      <!-- Loading -->
-      <div class="qs-loading" id="qs-loading" hidden>
-        <span class="qs-spinner"></span>
-        <span id="qs-loading-msg">Downloading &amp; scanning…</span>
-      </div>
-
-      <!-- Error -->
-      <div class="qs-error" id="qs-error" hidden></div>
-
-      <!-- Result -->
-      <div class="qs-result" id="qs-result" hidden>
-        <div class="qs-score-row">
-          <div class="qs-circle" id="qs-circle">
-            <span class="qs-score-val" id="qs-score-val">—</span>
-            <span class="qs-score-sub">/ 100</span>
-          </div>
-          <div class="qs-score-details">
-            <div class="qs-grade" id="qs-grade"></div>
-            <div class="qs-meta" id="qs-meta"></div>
-            <div class="qs-breakdown" id="qs-breakdown"></div>
-          </div>
-        </div>
-        <div class="qs-findings-wrap" id="qs-findings-wrap">
-          <p class="qs-section-label">Top findings</p>
-          <ul class="qs-findings" id="qs-findings"></ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Finding stats -->
+    <!-- Latest Scan stats -->
     <section class="panel">
       <h2>Latest Scan</h2>
       <div id="stats">
@@ -253,7 +266,7 @@ jobs:
         env:
           MISCONFIG_API_KEY: ${{ secrets.MISCONFIG_API_KEY }}
         run: |
-          python -m scanner.ci_ingest \
+          misconfig ingest \
             --path . \
             --repo "${{ github.repository }}" \
             --branch "${{ github.ref_name }}" \
@@ -262,7 +275,7 @@ jobs:
           <button class="copy-btn" data-target="ci-yaml">Copy</button>
         </div>
         <ol class="steps-list">
-          <li>Add <code class="inline-code">MISCONFIG_API_KEY</code> to your repository secrets.</li>
+          <li><a href="/signup/" style="color:#6366f1">Get an API key</a> and add it as <code class="inline-code">MISCONFIG_API_KEY</code> in your repository secrets.</li>
           <li>Commit the workflow file — the scanner runs on every IaC change.</li>
           <li>Adjust <code class="inline-code">MIN_SCORE</code> to set your quality gate threshold.</li>
         </ol>
@@ -303,7 +316,7 @@ jobs:
         </div>
 
         <p class="api-docs-note">
-          Full interactive API reference available at
+          Full interactive API reference at
           <a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">api.misconfig.dev/docs</a>
         </p>
       </div>
@@ -315,6 +328,7 @@ jobs:
       <div class="footer-brand">
         <p class="footer-brand-name">Misconfig<span>Index</span></p>
         <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+        <p class="footer-privacy-note">We store only scores and rule IDs. No source code is ever retained. <a href="/privacy/">Privacy policy</a></p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
@@ -323,6 +337,7 @@ jobs:
           <li><a href="/docs/">Documentation</a></li>
           <li><a href="/blog/">Blog</a></li>
           <li><a href="/pricing/">Pricing</a></li>
+          <li><a href="/signup/">Get API Key</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -331,6 +346,13 @@ jobs:
           <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
           <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy/">Privacy Policy</a></li>
+          <li><a href="/terms/">Terms of Service</a></li>
         </ul>
       </div>
     </div>

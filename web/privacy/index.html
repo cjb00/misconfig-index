@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Misconfig Index</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/blog/" class="nav-link">Blog</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+        <a href="/signup/" class="nav-link">Get API Key</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero hero--slim">
+    <div class="hero-content">
+      <h1>Privacy Policy</h1>
+      <p class="tagline">We built this for security engineers — we take data seriously.</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="legal-layout">
+      <div class="legal-content">
+        <p class="legal-effective">Effective date: February 28, 2026 &nbsp;·&nbsp; <a href="mailto:hello@misconfig.dev">hello@misconfig.dev</a></p>
+
+        <div class="legal-highlight">
+          <strong>The short version:</strong> We store your scan scores, repo identifiers, and finding rule IDs. We never store your source code, and we never sell your data to anyone.
+        </div>
+
+        <h2>What we collect</h2>
+        <p>When you use Misconfig Index — whether through the web UI Quick Scan, the CLI, or the API — we collect the minimum data needed to provide the service:</p>
+        <ul>
+          <li><strong>Repo identifier</strong> — the GitHub owner/repo string (e.g. <code style="font-size:13px;background:#1c2331;padding:1px 5px;border-radius:3px;color:#a5b4fc">hashicorp/terraform</code>). This tells us which repo a scan belongs to.</li>
+          <li><strong>Misconfig score and grade</strong> — the numeric score (0–100) and letter grade (A–F) computed from your scan.</li>
+          <li><strong>Finding rule IDs and counts</strong> — e.g. <code style="font-size:13px;background:#1c2331;padding:1px 5px;border-radius:3px;color:#a5b4fc">TF_OPEN_SG</code>. We record which rules fired and how many times, but never the actual values or file contents that triggered them.</li>
+          <li><strong>File counts</strong> — total number of IaC files scanned (no file names or paths are stored).</li>
+          <li><strong>Branch and commit SHA</strong> — optional, used to correlate scans with your git history when provided via <code style="font-size:13px;background:#1c2331;padding:1px 5px;border-radius:3px;color:#a5b4fc">misconfig ingest</code>.</li>
+          <li><strong>Organisation name and slug</strong> — provided by you when you create an account.</li>
+          <li><strong>API keys</strong> — stored as one-way hashes. We cannot recover your raw API key after it is issued.</li>
+          <li><strong>Standard server logs</strong> — IP addresses, request timestamps, and HTTP status codes retained for up to 30 days for security and abuse prevention.</li>
+        </ul>
+
+        <h2>What we never collect</h2>
+        <ul>
+          <li><strong>Source code</strong> — for Quick Scan, we download your repo ZIP, scan it in memory, and discard it immediately. No source code, file contents, or snippets are written to disk or stored in our database.</li>
+          <li><strong>Passwords or email addresses</strong> — accounts are API-key only; we do not require email registration.</li>
+          <li><strong>Personal information</strong> — we do not collect names, emails, or any PII beyond what you voluntarily provide in your org name.</li>
+          <li><strong>Cookies or tracking pixels</strong> — the dashboard is a plain static page with no analytics, tracking scripts, or third-party cookies.</li>
+        </ul>
+
+        <h2>How we use your data</h2>
+        <ul>
+          <li>To compute and display your Misconfig Score and trend history.</li>
+          <li>To populate the public Industry Benchmark (aggregated and anonymous — we show percentages across all repos, never individual repo data).</li>
+          <li>To generate your live score badge at <code style="font-size:13px;background:#1c2331;padding:1px 5px;border-radius:3px;color:#a5b4fc">api.misconfig.dev/badge/{org}/{repo}</code>.</li>
+          <li>To enforce rate limits and detect abuse.</li>
+        </ul>
+
+        <h2>Data retention</h2>
+        <ul>
+          <li><strong>Scan records</strong> — retained indefinitely for registered orgs so you can see long-term score trends.</li>
+          <li><strong>Quick Scan results</strong> — not stored at all. The scan happens in memory and the result is returned directly to your browser.</li>
+          <li><strong>Benchmark data</strong> — the public benchmark aggregates only scans from the last 90 days.</li>
+          <li><strong>Server logs</strong> — rotated after 30 days.</li>
+          <li><strong>Account deletion</strong> — email <a href="mailto:hello@misconfig.dev">hello@misconfig.dev</a> and we will delete all data associated with your org within 7 business days.</li>
+        </ul>
+
+        <h2>Data sharing</h2>
+        <p>We do not sell, rent, or share your data with any third party, full stop. The only external service involved in running Misconfig Index is the AWS EC2 instance that hosts the API and database. AWS is subject to its own <a href="https://aws.amazon.com/privacy/" target="_blank" rel="noopener">privacy policy</a>.</p>
+
+        <h2>Security</h2>
+        <p>All traffic is encrypted in transit via TLS (HTTPS). API keys are stored as one-way hashes and cannot be recovered by us. The database is not exposed to the public internet.</p>
+
+        <h2>Open source</h2>
+        <p>Misconfig Index is open source under the MIT licence. You can review exactly what data is collected and how it is processed in the <a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">public GitHub repository</a>, or self-host the entire stack.</p>
+
+        <h2>Changes</h2>
+        <p>If we materially change this policy, we will update the effective date above and post a notice on the blog. Continued use of the service after a policy change constitutes acceptance of the updated terms.</p>
+
+        <h2>Contact</h2>
+        <p>Questions? Email <a href="mailto:hello@misconfig.dev">hello@misconfig.dev</a>.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+        <p class="footer-privacy-note">We store only scores and rule IDs. No source code is ever retained. <a href="/privacy/">Privacy policy</a></p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+          <li><a href="/signup/">Get API Key</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy/">Privacy Policy</a></li>
+          <li><a href="/terms/">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+</body>
+</html>
