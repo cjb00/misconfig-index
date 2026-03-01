@@ -2,7 +2,7 @@
 
 **IaC misconfiguration scanner — score, track, and benchmark cloud security posture.**
 
-[![misconfig score](https://img.shields.io/badge/misconfig-A%20%E2%80%A2%2094-22c55e?style=flat-square&logo=terraform)](https://misconfig.dev)
+[![Misconfig Score](https://api.misconfig.dev/v1/badge/cjb00/misconfig-index)](https://misconfig.dev)
 [![PyPI version](https://img.shields.io/pypi/v/misconfig-index?style=flat-square)](https://pypi.org/project/misconfig-index/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
@@ -111,7 +111,7 @@ The scanner exits `0` on success, `1` if below threshold, `2` on error — GitHu
 Add a live score badge to your README that updates on every push:
 
 ```markdown
-![Misconfig Score](https://api.misconfig.dev/badge/YOUR_ORG/YOUR_REPO)
+[![Misconfig Score](https://api.misconfig.dev/v1/badge/YOUR_ORG/YOUR_REPO)](https://misconfig.dev)
 ```
 
 Badges are grade-coloured (🟢 A, 🟡 C, 🔴 F) and cached for 5 minutes.
@@ -136,7 +136,8 @@ Commands:
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--path`, `-p` | `.` | Directory to scan |
-| `--output`, `-o` | `table` | `table` or `json` |
+| `--output`, `-o` | `table` | `table`, `json`, or `sarif` (SARIF 2.1.0) |
+| `--exclude`, `-x` | — | Glob to exclude, e.g. `*/test/*`. Repeatable. Also reads `.misconfigignore` |
 | `--save` | off | Persist to local DB (requires `DATABASE_URL`) |
 
 ### `misconfig ingest`
@@ -288,7 +289,7 @@ score = clamp(0, 100 − (Σ weights / files_scanned) × 10)
 ## Development
 
 ```bash
-git clone https://github.com/misconfig-index/misconfig-index
+git clone https://github.com/cjb00/misconfig-index
 cd misconfig-index
 python -m venv .venv && source .venv/bin/activate
 pip install -e .

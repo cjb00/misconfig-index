@@ -53,7 +53,7 @@ jobs:
       - name: Scan IaC
         id: scan
         run: |
-          python -m scanner.ci_ingest \
+          misconfig ingest \
             --path . \
             --repo "github.com/${{ github.repository }}" \
             --branch "${{ github.ref_name }}" \
