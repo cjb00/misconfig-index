@@ -33,6 +33,18 @@ class Settings(BaseSettings):
     # In production set this to your actual frontend domain.
     CORS_ORIGINS: str = "*"
 
+    # ── GitHub OAuth ─────────────────────────────────────────────────────────
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+
+    # ── JWT ───────────────────────────────────────────────────────────────────
+    JWT_SECRET: str = "change-me-in-production"   # override in .env!
+    JWT_EXPIRE_DAYS: int = 7
+
+    # ── URLs ─────────────────────────────────────────────────────────────────
+    API_URL: str = "https://api.misconfig.dev"       # used in OAuth redirect URI
+    FRONTEND_URL: str = "https://misconfig.dev"      # redirect after login
+
     # ── Rate limiting (slowapi format: "N/period") ────────────────────────────
     RATE_LIMIT_PUBLIC: str = "60/minute"   # unauthenticated read endpoints
     RATE_LIMIT_BADGE: str = "120/minute"   # badge SVG (bots hit this a lot)

@@ -18,7 +18,12 @@
         <a href="/pricing/" class="nav-link">Pricing</a>
         <a href="/signup/" class="nav-link">Get API Key</a>
       </div>
-      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+      <div id="nav-auth" style="display:none">
+        <img id="nav-avatar" src="" alt="" width="28" height="28" style="border-radius:50%;vertical-align:middle;margin-right:6px">
+        <span id="nav-login" style="font-size:.85rem;color:var(--text-muted);margin-right:12px"></span>
+        <a href="#" id="nav-signout" class="nav-link" style="font-size:.85rem">Sign out</a>
+      </div>
+      <a href="https://api.misconfig.dev/auth/github/login" id="nav-signin" class="nav-cta">Sign in with GitHub</a>
     </div>
   </nav>
 

@@ -5,23 +5,53 @@ GET  /v1/orgs/{id}/keys — list API keys for an org
 """
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from ... import crud, schemas
 from ...deps import get_db
+from ...models import User, UserOrg
 from ...ratelimit import limiter
 
 router = APIRouter()
 
 
+def _get_optional_user(
+    authorization: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Like get_current_user but returns None instead of raising if no token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        from ...routers.auth import decode_jwt
+        token = authorization.removeprefix("Bearer ").strip()
+        payload = decode_jwt(token)
+        return db.query(User).filter(User.id == int(payload["sub"])).first()
+    except Exception:
+        return None
+
+
 @router.post("", response_model=schemas.OrgResponse, status_code=201)
 @limiter.limit("5/hour")
-def create_org(request: Request, body: schemas.OrgCreate, db: Session = Depends(get_db)):
-    """Create a new organization. Slug must be unique and lowercase alphanumeric."""
-    return crud.create_org(db, name=body.name, slug=body.slug)
+def create_org(
+    request: Request,
+    body: schemas.OrgCreate,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(_get_optional_user),
+):
+    """Create a new organization. Slug must be unique and lowercase alphanumeric.
+    If the request carries a valid JWT, the new org is linked to that user as owner."""
+    org = crud.create_org(db, name=body.name, slug=body.slug)
+
+    # Link to authenticated user if one is logged in
+    if current_user:
+        db.add(UserOrg(user_id=current_user.id, org_id=org.id, role="owner"))
+        db.commit()
+
+    return org
 
 
 @router.post("/{org_id}/keys", response_model=schemas.ApiKeyResponse, status_code=201)

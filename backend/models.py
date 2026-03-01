@@ -22,6 +22,21 @@ Base = declarative_base()
 # Phase 2: Multi-tenancy
 # ---------------------------------------------------------------------------
 
+class User(Base):
+    """A GitHub-authenticated user account."""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    github_id = Column(Integer, unique=True, nullable=False, index=True)
+    github_login = Column(String, nullable=False)          # GitHub username
+    github_email = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user_orgs = relationship("UserOrg", back_populates="user")
+
+
 class Organization(Base):
     __tablename__ = "organizations"
 
@@ -32,6 +47,21 @@ class Organization(Base):
 
     api_keys = relationship("ApiKey", back_populates="org")
     sources = relationship("Source", back_populates="org")
+    user_orgs = relationship("UserOrg", back_populates="org")
+
+
+class UserOrg(Base):
+    """Links a User to an Organization with a role."""
+    __tablename__ = "user_orgs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    org_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
+    role = Column(String, nullable=False, default="owner")  # owner | member
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="user_orgs")
+    org = relationship("Organization", back_populates="user_orgs")
 
 
 class ApiKey(Base):

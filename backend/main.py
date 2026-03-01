@@ -8,7 +8,7 @@ from slowapi import _rate_limit_exceeded_handler
 from .config import settings
 from .deps import SessionLocal, init_db
 from .ratelimit import limiter
-from .routers import badge, findings, reports, scans
+from .routers import auth, badge, findings, reports, scans
 from .routers.v1 import benchmark, ingest, orgs, repos
 
 app = FastAPI(
@@ -79,3 +79,6 @@ app.include_router(benchmark.router, prefix="/v1/benchmark", tags=["v1 / benchma
 
 # Public badge endpoint (no auth — for README embedding)
 app.include_router(badge.router, prefix="/badge", tags=["badge"])
+
+# GitHub OAuth + JWT auth
+app.include_router(auth.router, prefix="/auth", tags=["auth"])

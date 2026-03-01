@@ -538,6 +538,91 @@ function initQuickScan() {
 }
 
 
+// ── Auth (GitHub OAuth + JWT) ─────────────────────────────────────────────────
+
+const AUTH_API = "https://api.misconfig.dev";
+
+function authGetToken() {
+  return localStorage.getItem("misconfig_token");
+}
+
+function authSetToken(token) {
+  localStorage.setItem("misconfig_token", token);
+}
+
+function authClear() {
+  localStorage.removeItem("misconfig_token");
+  localStorage.removeItem("misconfig_user");
+}
+
+function authGetUser() {
+  const raw = localStorage.getItem("misconfig_user");
+  return raw ? JSON.parse(raw) : null;
+}
+
+async function authFetchMe(token) {
+  const res = await fetch(`${AUTH_API}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+function authRenderNav(user) {
+  const signinBtn = document.getElementById("nav-signin");
+  const authBlock = document.getElementById("nav-auth");
+  const avatar    = document.getElementById("nav-avatar");
+  const loginSpan = document.getElementById("nav-login");
+  const signout   = document.getElementById("nav-signout");
+
+  if (!signinBtn) return;
+
+  if (user) {
+    signinBtn.style.display = "none";
+    authBlock.style.display = "inline-flex";
+    authBlock.style.alignItems = "center";
+    avatar.src = user.avatar_url || "";
+    avatar.style.display = user.avatar_url ? "inline" : "none";
+    loginSpan.textContent = user.github_login;
+    signout.addEventListener("click", (e) => {
+      e.preventDefault();
+      authClear();
+      window.location.reload();
+    });
+  } else {
+    signinBtn.style.display = "";
+    authBlock.style.display = "none";
+  }
+}
+
+async function initAuth() {
+  // Pick up token from URL after GitHub OAuth callback redirect
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get("token");
+  if (urlToken) {
+    authSetToken(urlToken);
+    // Clean token from URL without triggering a reload
+    const clean = window.location.pathname;
+    window.history.replaceState({}, "", clean);
+  }
+
+  const token = authGetToken();
+  if (!token) { authRenderNav(null); return; }
+
+  // Use cached user if fresh enough, otherwise re-fetch
+  let user = authGetUser();
+  if (!user) {
+    user = await authFetchMe(token);
+    if (user) {
+      localStorage.setItem("misconfig_user", JSON.stringify(user));
+    } else {
+      authClear(); // token expired / invalid
+    }
+  }
+  authRenderNav(user);
+}
+
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -547,4 +632,5 @@ window.addEventListener("DOMContentLoaded", () => {
   initTabs();
   initCopyButtons();
   initQuickScan();
+  initAuth();
 });
