@@ -200,7 +200,11 @@
 
         if (!orgRes.ok) {
           const body = await orgRes.json().catch(() => ({}));
-          throw new Error(body.detail || `HTTP ${orgRes.status}`);
+          const detail = body.detail;
+          const msg = Array.isArray(detail)
+            ? detail.map(e => e.msg || JSON.stringify(e)).join("; ")
+            : (typeof detail === "string" ? detail : `HTTP ${orgRes.status}`);
+          throw new Error(msg);
         }
 
         const org = await orgRes.json();
@@ -210,12 +214,16 @@
         const keyRes = await fetch(`${API_BASE}/v1/orgs/${orgId}/keys`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ label: "default" }),
+          body: JSON.stringify({ name: "default" }),
         });
 
         if (!keyRes.ok) {
           const body = await keyRes.json().catch(() => ({}));
-          throw new Error(body.detail || `HTTP ${keyRes.status}`);
+          const detail = body.detail;
+          const msg = Array.isArray(detail)
+            ? detail.map(e => e.msg || JSON.stringify(e)).join("; ")
+            : (typeof detail === "string" ? detail : `HTTP ${keyRes.status}`);
+          throw new Error(msg);
         }
 
         const keyData = await keyRes.json();
