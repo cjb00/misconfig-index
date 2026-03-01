@@ -4,7 +4,7 @@
 #   1. Create a PyPI account at https://pypi.org
 #   2. Go to PyPI → Account Settings → Publishing → Add a new publisher
 #      - PyPI project name : misconfig-index
-#      - Owner             : misconfig-index  (your GitHub org/user)
+#      - Owner             : cjb00  (your GitHub username)
 #      - Repository        : misconfig-index
 #      - Workflow name     : publish.yml
 #      - Environment name  : pypi

@@ -49,9 +49,9 @@ dev = [
 
 [project.urls]
 Homepage      = "https://misconfig.dev"
-Repository    = "https://github.com/misconfig-index/misconfig-index"
+Repository    = "https://github.com/cjb00/misconfig-index"
 Documentation = "https://misconfig.dev/docs"
-"Bug Tracker" = "https://github.com/misconfig-index/misconfig-index/issues"
+"Bug Tracker" = "https://github.com/cjb00/misconfig-index/issues"
 
 # ── CLI entry point ─────────────────────────────────────────────────────────
 # After `pip install misconfig-index`, users get the `misconfig` command.
