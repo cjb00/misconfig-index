@@ -26,6 +26,7 @@ on:
       - "**.yaml"
       - "**.yml"
       - "**/Dockerfile"
+  workflow_dispatch:   # allows manual trigger from GitHub Actions UI
 
 env:
   MISCONFIG_API_URL: https://api.misconfig.dev   # change if self-hosting
@@ -47,12 +48,7 @@ jobs:
           cache: pip
 
       - name: Install Misconfig Index scanner
-        run: |
-          pip install \
-            fastapi sqlalchemy pydantic python-dotenv \
-            uvicorn psycopg2-binary alembic
-          # Install from source until pip package is published
-          pip install -e . --quiet
+        run: pip install "misconfig-index[server]"
 
       - name: Scan IaC
         id: scan
