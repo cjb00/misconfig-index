@@ -7,17 +7,19 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from ... import crud, schemas
 from ...deps import get_db
+from ...ratelimit import limiter
 
 router = APIRouter()
 
 
 @router.post("", response_model=schemas.OrgResponse, status_code=201)
-def create_org(body: schemas.OrgCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/hour")
+def create_org(request: Request, body: schemas.OrgCreate, db: Session = Depends(get_db)):
     """Create a new organization. Slug must be unique and lowercase alphanumeric."""
     return crud.create_org(db, name=body.name, slug=body.slug)
 

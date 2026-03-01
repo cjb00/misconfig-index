@@ -2,7 +2,7 @@
 
 **IaC misconfiguration scanner — score, track, and benchmark cloud security posture.**
 
-[![Misconfig Score](https://api.misconfig.dev/v1/badge/cjb00/misconfig-index)](https://misconfig.dev)
+[![Misconfig Score](https://api.misconfig.dev/badge/cjb00/github.com/cjb00/misconfig-index)](https://misconfig.dev)
 [![PyPI version](https://img.shields.io/pypi/v/misconfig-index?style=flat-square)](https://pypi.org/project/misconfig-index/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
@@ -111,10 +111,10 @@ The scanner exits `0` on success, `1` if below threshold, `2` on error — GitHu
 Add a live score badge to your README that updates on every push:
 
 ```markdown
-[![Misconfig Score](https://api.misconfig.dev/v1/badge/YOUR_ORG/YOUR_REPO)](https://misconfig.dev)
+[![Misconfig Score](https://api.misconfig.dev/badge/YOUR_ORG/github.com/YOUR_ORG/YOUR_REPO)](https://misconfig.dev)
 ```
 
-Badges are grade-coloured (🟢 A, 🟡 C, 🔴 F) and cached for 5 minutes.
+Where `YOUR_ORG` is your Misconfig Index org slug and `github.com/YOUR_ORG/YOUR_REPO` matches the `--repo` identifier used in your CI workflow. Badges are grade-coloured (🟢 A, 🟡 C, 🔴 F) and cached for 5 minutes.
 
 ---
 
