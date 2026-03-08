@@ -14,6 +14,30 @@ def _find_line_numbers(content: str, match_start: int) -> tuple[int, int]:
     return line_start, line_start
 
 
+_VAR_BLOCK_RE = re.compile(r'\bvariable\s+"[^"]*"\s*\{')
+
+
+def _variable_block_spans(content: str) -> list[tuple[int, int]]:
+    """Return (start, end) byte offsets for every variable {} block.
+
+    Matches that fall inside these spans are module input declarations
+    (variable defaults / type constraints), not hardcoded infrastructure
+    config.  Rules skip them to avoid false positives in module repos.
+    """
+    spans: list[tuple[int, int]] = []
+    for m in _VAR_BLOCK_RE.finditer(content):
+        depth = 0
+        for i in range(m.start(), len(content)):
+            if content[i] == "{":
+                depth += 1
+            elif content[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    spans.append((m.start(), i))
+                    break
+    return spans
+
+
 class _S(Rule, ABC):
     """
     SimplePatternRule mixin — fires one Finding per regex match.
@@ -23,9 +47,14 @@ class _S(Rule, ABC):
     pattern: re.Pattern
 
     def match(self, content: str, filename: str) -> List[Finding]:
+        var_spans = _variable_block_spans(content)
         findings: List[Finding] = []
         lines = content.splitlines()
         for m in self.pattern.finditer(content):
+            # Skip matches inside variable {} blocks — those are module input
+            # declarations (defaults / type constraints), not hardcoded config.
+            if any(s <= m.start() <= e for s, e in var_spans):
+                continue
             line_start, _ = _find_line_numbers(content, m.start())
             snippet = lines[line_start - 1].strip() if lines else ""
             findings.append(

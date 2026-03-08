@@ -1,0 +1,123 @@
+# 100 Public GitHub Repos with IaC Content
+# For use with: misconfig scan --path .
+# Mix of Terraform, Kubernetes, CloudFormation, and Dockerfile content
+
+## TERRAFORM - HashiCorp & Official
+https://github.com/hashicorp/terraform
+# https://github.com/hashicorp/terraform-provider-aws
+# https://github.com/hashicorp/terraform-provider-google
+# https://github.com/hashicorp/terraform-provider-kubernetes
+https://github.com/hashicorp/terraform-guides
+https://github.com/hashicorp/vault-helm
+https://github.com/hashicorp/terraform-aws-vault
+https://github.com/hashicorp/terraform-aws-consul
+https://github.com/hashicorp/terraform-aws-nomad
+
+## TERRAFORM - AWS Modules
+https://github.com/terraform-aws-modules/terraform-aws-vpc
+https://github.com/terraform-aws-modules/terraform-aws-eks
+https://github.com/terraform-aws-modules/terraform-aws-rds
+https://github.com/terraform-aws-modules/terraform-aws-s3-bucket
+https://github.com/terraform-aws-modules/terraform-aws-ec2-instance
+https://github.com/terraform-aws-modules/terraform-aws-security-group
+https://github.com/terraform-aws-modules/terraform-aws-iam
+https://github.com/terraform-aws-modules/terraform-aws-alb
+https://github.com/terraform-aws-modules/terraform-aws-lambda
+https://github.com/terraform-aws-modules/terraform-aws-autoscaling
+https://github.com/terraform-aws-modules/terraform-aws-elasticache
+https://github.com/terraform-aws-modules/terraform-aws-cloudwatch
+https://github.com/terraform-aws-modules/terraform-aws-sns
+https://github.com/terraform-aws-modules/terraform-aws-sqs
+https://github.com/terraform-aws-modules/terraform-aws-transit-gateway
+https://github.com/terraform-aws-modules/terraform-aws-ecs
+
+## TERRAFORM - GCP Modules
+https://github.com/terraform-google-modules/terraform-google-network
+https://github.com/terraform-google-modules/terraform-google-kubernetes-engine
+https://github.com/terraform-google-modules/terraform-google-iam
+https://github.com/terraform-google-modules/terraform-google-sql-db
+https://github.com/terraform-google-modules/terraform-google-cloud-storage
+
+## TERRAFORM - Azure Modules
+https://github.com/Azure/terraform-azurerm-network
+https://github.com/Azure/terraform-azurerm-aks
+https://github.com/Azure/terraform-azurerm-postgresql
+
+## TERRAFORM - Community & Examples
+https://github.com/antonbabenko/terraform-best-practices
+https://github.com/brikis98/terraform-up-and-running-code
+https://github.com/futurice/terraform-examples
+https://github.com/wardviaene/terraform-course
+https://github.com/gruntwork-io/terragrunt
+https://github.com/cloudposse/terraform-aws-components
+https://github.com/cloudposse/terraform-aws-eks-cluster
+https://github.com/cloudposse/terraform-aws-rds
+https://github.com/cloudposse/terraform-aws-vpc
+https://github.com/cloudposse/terraform-aws-security-group
+https://github.com/cloudposse/terraform-aws-ecs-cluster
+https://github.com/cloudposse/terraform-aws-ecr
+https://github.com/opentofu/opentofu
+https://github.com/nozaq/terraform-aws-secure-baseline
+
+## KUBERNETES - Official & Core
+# https://github.com/kubernetes/kubernetes
+https://github.com/kubernetes/examples
+https://github.com/kubernetes/ingress-nginx
+https://github.com/kubernetes-sigs/kustomize
+https://github.com/kubernetes-sigs/cluster-api
+https://github.com/kubernetes/dashboard
+
+## KUBERNETES - Helm Charts
+https://github.com/helm/charts
+https://github.com/bitnami/charts
+https://github.com/hashicorp/consul-helm
+https://github.com/grafana/helm-charts
+https://github.com/prometheus-community/helm-charts
+https://github.com/elastic/helm-charts
+https://github.com/cert-manager/cert-manager
+https://github.com/argoproj/argo-cd
+https://github.com/argoproj/argo-workflows
+https://github.com/fluxcd/flux2
+
+## KUBERNETES - Real World Examples
+https://github.com/GoogleCloudPlatform/microservices-demo
+https://github.com/dockersamples/example-voting-app
+https://github.com/kelseyhightower/kubernetes-the-hard-way
+https://github.com/ContainerSolutions/kubernetes-examples
+https://github.com/wardviaene/kubernetes-course
+https://github.com/kubernetes-sigs/metrics-server
+https://github.com/kubernetes-sigs/external-dns
+https://github.com/learnk8s/xlskubectl
+https://github.com/robusta-dev/krr
+https://github.com/datreeio/datree
+https://github.com/stackrox/kube-linter
+
+## CLOUDFORMATION
+https://github.com/awslabs/aws-cloudformation-templates
+https://github.com/aws-quickstart/quickstart-hashicorp-vault
+https://github.com/aws-quickstart/quickstart-linux-bastion
+https://github.com/aws-samples/ecs-refarch-cloudformation
+https://github.com/aws-samples/ecs-refarch-continuous-deployment
+https://github.com/aws-cloudformation/cfn-lint
+https://github.com/aws-samples/aws-vpc-flow-log-appender
+https://github.com/aws-samples/serverless-app-examples
+https://github.com/widdix/aws-cf-templates
+https://github.com/stelligent/cloudformation_templates
+
+## DOCKERFILE HEAVY
+https://github.com/docker/awesome-compose
+https://github.com/docker-library/official-images
+https://github.com/jessfraz/dockerfiles
+https://github.com/linuxserver/docker-swag
+https://github.com/laradock/laradock
+https://github.com/bitnami/containers
+https://github.com/nginxinc/docker-nginx
+https://github.com/nodejs/docker-node
+https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker
+
+## MIXED IAC (Terraform + K8s + Dockerfile)
+https://github.com/localstack/localstack
+https://github.com/grafana/grafana
+https://github.com/prometheus/prometheus
+https://github.com/elastic/elasticsearch
+https://github.com/gitpod-io/gitpod
