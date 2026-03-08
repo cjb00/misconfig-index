@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <title>We Scanned 92 Open Source IaC Repos. Here's What We Found. — Misconfig Index</title>
+  <meta name="description" content="Terraform, Kubernetes, and CloudFormation — 1,762 findings across 92 public repos. We expected Kubernetes and Terraform to score similarly. They didn't.">
+  <!-- Open Graph / Twitter Card -->
+  <meta property="og:type"         content="article">
+  <meta property="og:site_name"    content="Misconfig Index">
+  <meta property="og:title"        content="We Scanned 92 Open Source IaC Repos. Here's What We Found.">
+  <meta property="og:description"  content="Terraform, Kubernetes, and CloudFormation — 1,762 findings across 92 public repos. We expected Kubernetes and Terraform to score similarly. They didn't.">
+  <meta property="og:url"          content="https://misconfig.dev/blog/we-scanned-92-iac-repos/">
+  <meta property="og:image"        content="https://misconfig.dev/og-image.png">
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="We Scanned 92 Open Source IaC Repos. Here's What We Found.">
+  <meta name="twitter:description" content="Terraform, Kubernetes, and CloudFormation — 1,762 findings across 92 public repos. We expected Kubernetes and Terraform to score similarly. They didn't.">
+  <meta name="twitter:image"       content="https://misconfig.dev/og-image.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/blog/" class="nav-link active">Blog</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+        <a href="/signup/" class="nav-link">Get API Key</a>
+      </div>
+      <a href="https://api.misconfig.dev/docs" class="nav-cta" target="_blank" rel="noopener">API Docs →</a>
+    </div>
+  </nav>
+
+  <header class="hero hero--slim">
+    <div class="hero-content">
+      <span class="post-tag" style="margin-bottom: 14px; display: inline-block;">Research</span>
+      <h1>We Scanned 92 Open Source IaC Repos. Here's What We Found.</h1>
+      <p class="tagline">Terraform, Kubernetes, and CloudFormation — 1,762 findings across 92 public repos. We expected Kubernetes and Terraform to score similarly. They didn't.</p>
+      <p style="margin: 8px 0 0; font-size: 13px; color: #4a5568;">March 8, 2026 · 8 min read</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="article-panel article-body">
+
+      <h2>TL;DR</h2>
+      <ul>
+        <li><strong>92 repos scanned</strong> across Terraform, Kubernetes, CloudFormation, and Dockerfile</li>
+        <li><strong>1,762 total findings</strong> — but the distribution is heavily bimodal</li>
+        <li><strong>CloudFormation is nearly perfect</strong>: 9/9 repos scored A (100/100), only 1 finding total</li>
+        <li><strong>Kubernetes has the most risk</strong>: average score 82.4, responsible for 68% of all findings despite being 27% of the dataset</li>
+        <li><strong>#1 issue by volume</strong>: missing resource limits — found in 27% of all repos</li>
+        <li><strong>6 of the top 10 misconfigs are Kubernetes-specific</strong></li>
+      </ul>
+
+      <h2>Why We Did This</h2>
+
+      <p>We built <a href="https://misconfig.dev">Misconfig Index</a> to give any public GitHub repo an IaC security score — the kind of quick signal that CI/CD pipelines and security reviews need. Before we started telling people their repos had problems, we wanted to understand the baseline: what does the broader IaC ecosystem actually look like?</p>
+
+      <p>We selected 92 public repos representing a realistic cross-section — official cloud provider modules, popular community modules, real-world applications, GitOps tooling, and Helm chart repositories. Then we ran every one of them through the scanner locally, with no rate limits and no cherry-picking.</p>
+
+      <h2>Methodology</h2>
+
+      <p>All repos were scanned using the Misconfig Index local scanner (git clone + static analysis, no network calls). The scanner detects misconfigurations across Terraform HCL, Kubernetes YAML, CloudFormation JSON/YAML, and Dockerfiles. Variable blocks and auto-generated wrapper modules are excluded to avoid false positives on module input declarations. Provider SDK repos (<code>terraform-provider-*</code>) and the Kubernetes monorepo were excluded since they contain test fixtures rather than deployed infrastructure. Six educational repos (Udemy courses, O'Reilly book companion code, official tutorial examples) are <a href="#the-education-gap">reported separately</a> — they intentionally demonstrate misconfigured patterns for teaching purposes.</p>
+
+      <p><strong>Scores run 0–100. Grades map A (90–100) → F (0–39).</strong></p>
+
+      <h2>The Distribution Is Bimodal — and That's the Story</h2>
+
+      <p>The average score across all 92 repos is <strong>87.9/100</strong>. The median is <strong>98/100</strong>.</p>
+
+      <p>Those two numbers tell you everything: most repos are clean, but a handful are dragging the average down hard.</p>
+
+      <table>
+        <thead>
+          <tr><th>Grade</th><th>Repos</th><th>Pct</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>A</strong> (90–100)</td><td>63</td><td>68%</td></tr>
+          <tr><td><strong>B</strong> (80–89)</td><td>11</td><td>12%</td></tr>
+          <tr><td><strong>C</strong> (70–79)</td><td>9</td><td>10%</td></tr>
+          <tr><td><strong>D</strong> (40–69)</td><td>6</td><td>7%</td></tr>
+          <tr><td><strong>F</strong> (0–39)</td><td>3</td><td>3%</td></tr>
+        </tbody>
+      </table>
+
+      <p>The 68% getting an A aren't squeaking by — most score 95–100. The repos in the D–F range have deep, systemic issues: hundreds of findings concentrated in a small number of rule categories. This isn't a bell curve. It's two clusters with a gap in between.</p>
+
+      <h2>Finding #1: CloudFormation Is Surprisingly Clean</h2>
+
+      <p>We expected CloudFormation to perform roughly in line with Terraform — same declarative config, same kind of AWS-specific rules. It didn't come close.</p>
+
+      <table>
+        <thead>
+          <tr><th>IaC Type</th><th>Repos</th><th>Avg Score</th><th>Total Findings</th><th>F Grades</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>CloudFormation</strong></td><td>9</td><td><strong>100.0</strong></td><td><strong>1</strong></td><td>0</td></tr>
+          <tr><td>Mixed (TF+K8s+Docker)</td><td>5</td><td>97.4</td><td>33</td><td>0</td></tr>
+          <tr><td>Dockerfile</td><td>9</td><td>93.0</td><td>107</td><td>0</td></tr>
+          <tr><td><strong>Terraform</strong></td><td>44</td><td>86.3</td><td>414</td><td>2</td></tr>
+          <tr><td><strong>Kubernetes</strong></td><td>25</td><td>82.4</td><td>1,207</td><td>1</td></tr>
+        </tbody>
+      </table>
+
+      <p>Every single CloudFormation repo scored 100/100. The nine repos generated exactly one finding between them — a single resource in <code>awslabs/aws-cloudformation-templates</code>. (Nine repos is a thin sample — we'd want 30+ before drawing strong conclusions about CFN as a format; treat this as a signal worth investigating, not a verdict.)</p>
+
+      <p>Our hypothesis: CloudFormation's declarative JSON/YAML format, combined with AWS's conservative defaults and extensive schema validation at deploy time, pushes misconfiguration issues to the surface earlier than Terraform or Kubernetes. The friction of writing JSON keeps configs simple. Whether that's a feature or a limitation is a separate debate.</p>
+
+      <h2>Finding #2: Kubernetes Has a Security Problem</h2>
+
+      <p>Kubernetes repos represent 27% of our dataset but account for <strong>68% of all findings</strong> (1,207 out of 1,762). The average Kubernetes repo score is 82.4 — seven points lower than Terraform, fifteen points lower than Dockerfile repos.</p>
+
+      <p>The finding distribution is concentrated: a small number of Helm chart repositories (particularly <code>helm/charts</code>, the officially deprecated archive with 287 findings, and <code>bitnami/charts</code> with 201) drove the majority of the volume. But even excluding those, Kubernetes repos consistently had more findings per repo than any other type.</p>
+
+      <p>What's driving it? The Kubernetes runtime security model — resource limits, security contexts, privileged mode, host namespaces, read-only filesystems — offers a lot of knobs. Most repos aren't turning them.</p>
+
+      <h2>The Top 10 Misconfigurations</h2>
+
+      <p>These are the rules that fired most often across all 92 repos, by total hit count and percentage of repos affected.</p>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>Misconfiguration</th><th>Hits</th><th>Repos Affected</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>No CPU/memory resource limits</td><td>476</td><td><strong>27%</strong></td></tr>
+          <tr><td>2</td><td>Container image uses <code>:latest</code> tag</td><td>375</td><td><strong>26%</strong></td></tr>
+          <tr><td>3</td><td>Container runs as root (UID 0)</td><td>178</td><td>9%</td></tr>
+          <tr><td>4</td><td>Security group open to <code>0.0.0.0/0</code></td><td>162</td><td>18%</td></tr>
+          <tr><td>5</td><td>IAM wildcard resource (<code>*</code>)</td><td>119</td><td>10%</td></tr>
+          <tr><td>6</td><td>Writable root filesystem</td><td>110</td><td>11%</td></tr>
+          <tr><td>7</td><td>Privileged container mode</td><td>109</td><td>14%</td></tr>
+          <tr><td>8</td><td><code>hostNetwork</code> or <code>hostPID</code> enabled</td><td>107</td><td>13%</td></tr>
+          <tr><td>9</td><td>Security group allows all traffic (<code>-1</code>)</td><td>63</td><td>13%</td></tr>
+          <tr><td>10</td><td>IAM wildcard resource (HCL policy)</td><td>28</td><td>4%</td></tr>
+        </tbody>
+      </table>
+
+      <p><strong>Six of the top 10 are Kubernetes-specific.</strong> The two Terraform networking issues (#4 and #9) are the most commonly flagged non-Kubernetes problems.</p>
+
+      <h3>The top two aren't exotic</h3>
+
+      <p>Rules 1 and 2 — missing resource limits and <code>:latest</code> image tags — are the unglamorous basics. They're not zero-days. They won't get your name on a CVE. But missing resource limits means one noisy neighbour can starve your entire node, and <code>:latest</code> means your deployments are non-reproducible and your container could silently change under you.</p>
+
+      <p>Combined, these two rules account for <strong>851 findings</strong> — nearly half the total — across a quarter of all repos.</p>
+
+      <h3>The networking gap</h3>
+
+      <p><code>0.0.0.0/0</code> in a security group, or a group that allows all traffic with protocol <code>-1</code>, is the Terraform equivalent of <code>chmod 777</code>. It showed up in 18% of repos, almost entirely in Terraform. The specific patterns we saw: egress rules that open all outbound traffic (the default "it works, ship it" pattern) and ingress rules left open from debugging that never got locked down.</p>
+
+      <h3>IAM wildcards — a real finding in official code</h3>
+
+      <p><code>resources = ["*"]</code> in an IAM policy definition appeared in 10% of repos. Some of these are legitimate — certain AWS actions (like <code>cloudwatch:PutMetricData</code>) genuinely have no resource-level restriction. But several were broad admin-style policies attached to service roles. The <code>terraform-aws-modules/terraform-aws-iam</code> module scored F (5/100) specifically because it ships pre-built policies with wildcard resources — a known design trade-off that users should be aware of when adopting those modules.</p>
+
+      <h2>Finding #3: The Security Category That Consistently Fails</h2>
+
+      <p>Looking at how repos score by finding category:</p>
+
+      <table>
+        <thead>
+          <tr><th>Category</th><th>Avg Score</th><th>Repos with Findings</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Networking</strong></td><td><strong>76.7</strong></td><td>20 repos</td></tr>
+          <tr><td>Identity/IAM</td><td>80.9</td><td>13 repos</td></tr>
+          <tr><td>Workload</td><td>83.2</td><td>32 repos</td></tr>
+          <tr><td>Storage</td><td>85.2</td><td>4 repos</td></tr>
+          <tr><td>Image</td><td><strong>96.1</strong></td><td>26 repos</td></tr>
+        </tbody>
+      </table>
+
+      <p>Networking is the weakest category — 20 repos had networking findings, and their average networking score was 76.7. Image security (base image hygiene) is the strongest, averaging 96.1.</p>
+
+      <p>The gap between image hygiene and networking security is striking. Teams are being deliberate about base images but sloppy about ingress/egress rules.</p>
+
+      <h2 id="the-education-gap">The Education Gap</h2>
+
+      <p>Six repos in our dataset are explicitly educational — Udemy courses, O'Reilly book companion code, and official tutorial collections. We analyzed them but kept them out of the trend numbers since they intentionally demonstrate broken patterns for teaching purposes.</p>
+
+      <table>
+        <thead>
+          <tr><th>Score</th><th>Repo</th><th>Type</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>F/0</strong> (123 findings)</td><td><code>wardviaene/terraform-course</code></td><td>Udemy course</td></tr>
+          <tr><td>D/45 (97 findings)</td><td><code>kubernetes/examples</code></td><td>Official K8s tutorial</td></tr>
+          <tr><td>D/57 (30 findings)</td><td><code>futurice/terraform-examples</code></td><td>Example patterns</td></tr>
+          <tr><td>D/58 (63 findings)</td><td><code>ContainerSolutions/kubernetes-examples</code></td><td>K8s tutorial</td></tr>
+          <tr><td>D/59 (39 findings)</td><td><code>brikis98/terraform-up-and-running-code</code></td><td><em>Terraform: Up &amp; Running</em> code</td></tr>
+          <tr><td>C/66 (48 findings)</td><td><code>wardviaene/kubernetes-course</code></td><td>Udemy course</td></tr>
+        </tbody>
+      </table>
+
+      <p>The course repos score low because they walk through progressively building out infrastructure — including intentionally insecure configs that get fixed by the end of the chapter. The takeaway isn't that the courses are bad. It's that if you're copying config from a tutorial into production without audit, that's the risk vector.</p>
+
+      <h2>What This Means for Your Repo</h2>
+
+      <p>Based on the data, the highest-value checks to run on any IaC codebase:</p>
+
+      <ol>
+        <li><strong>Set resource limits on every container.</strong> CPU and memory limits should be mandatory in any production Kubernetes config. They're absent in 27% of repos in our dataset.</li>
+        <li><strong>Pin your image tags.</strong> Replace <code>:latest</code> with a specific digest or semver tag. This is table stakes for reproducible deployments.</li>
+        <li><strong>Audit your security groups for <code>0.0.0.0/0</code>.</strong> Every open ingress rule should have a documented reason. Egress is lower risk but <code>0.0.0.0/0</code> all-traffic egress (<code>-1</code>) rules should also be reviewed.</li>
+        <li><strong>Scope your IAM policies.</strong> <code>Resource: "*"</code> on an action that supports resource-level permissions is unnecessary and a privilege escalation vector.</li>
+        <li><strong>Check your security contexts.</strong> <code>runAsRoot</code>, <code>privileged: true</code>, <code>hostNetwork: true</code> — each one is a potential container escape. If you don't need it, remove it.</li>
+      </ol>
+
+      <h2>Try It on Your Own Repo</h2>
+
+      <p>Every score in this post was generated by the same scanner available at <a href="https://misconfig.dev">misconfig.dev</a>. Paste your public GitHub repo URL and get a score in under a minute.</p>
+
+      <p>The CLI is also available for CI integration:</p>
+
+      <pre><code>pip install misconfig-index
+misconfig scan --path ./infra</code></pre>
+
+      <p>If you want to run the same bulk analysis we ran here, the scanner, repo list, and analysis scripts are all in the <a href="https://github.com/cjb00/misconfig-index" target="_blank" rel="noopener">misconfig-index GitHub repo</a>.</p>
+
+      <p style="margin-top: 32px; font-size: 13px; color: #9aa5b8;"><em>Scanned March 2026. 92 repos, 1,762 findings, one very clean CloudFormation dataset.</em></p>
+
+    </div>
+
+    <div class="panel" style="text-align: center; padding: 32px 24px;">
+      <h3 style="margin: 0 0 8px 0; font-size: 18px;">Score your own IaC</h3>
+      <p style="color: #9aa5b8; margin: 0 0 20px 0; font-size: 14px;">Paste your GitHub repo URL and get results in under 60 seconds.</p>
+      <a href="/" class="btn-primary">Scan a repo</a>
+      <a href="/blog/" class="btn-secondary">← Back to blog</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+        <p class="footer-privacy-note">We store only scores and rule IDs. No source code is ever retained. <a href="/privacy/">Privacy policy</a></p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+          <li><a href="/signup/">Get API Key</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/cjb00/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy/">Privacy Policy</a></li>
+          <li><a href="/terms/">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+</body>
+</html>
