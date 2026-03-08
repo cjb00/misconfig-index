@@ -8,7 +8,7 @@ from slowapi import _rate_limit_exceeded_handler
 from .config import settings
 from .deps import SessionLocal, init_db
 from .ratelimit import limiter
-from .routers import auth, badge, findings, reports, scans
+from .routers import auth, badge, billing, findings, reports, scans, waitlist
 from .routers.v1 import benchmark, ingest, orgs, repos
 
 app = FastAPI(
@@ -54,14 +54,10 @@ def startup() -> None:
 
 
 # ── Meta endpoints ────────────────────────────────────────────────────────────
-@app.get("/health", tags=["meta"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["meta"])
 def health() -> dict[str, str]:
     return {"status": "ok", "environment": settings.ENVIRONMENT}
 
-
-@app.get("/debug/routes", tags=["meta"], include_in_schema=False)
-def list_routes() -> list[str]:
-    return [route.path for route in app.router.routes]
 
 
 # ── Routers ───────────────────────────────────────────────────────────────────
@@ -82,3 +78,9 @@ app.include_router(badge.router, prefix="/badge", tags=["badge"])
 
 # GitHub OAuth + JWT auth
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+# Stripe billing
+app.include_router(billing.router, prefix="/billing", tags=["billing"])
+
+# Pro waitlist (pre-LLC signup)
+app.include_router(waitlist.router, prefix="/waitlist", tags=["waitlist"])

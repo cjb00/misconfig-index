@@ -40,6 +40,7 @@ server = [
     "slowapi>=0.1.9",
     "httpx>=0.27.0",
     "PyJWT>=2.8.0",
+    "stripe>=7.0.0",
 ]
 # Development / testing
 dev = [

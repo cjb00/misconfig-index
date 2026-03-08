@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     API_URL: str = "https://api.misconfig.dev"       # used in OAuth redirect URI
     FRONTEND_URL: str = "https://misconfig.dev"      # redirect after login
 
+    # ── Stripe billing ────────────────────────────────────────────────────────
+    STRIPE_SECRET_KEY: str = ""           # sk_live_... or sk_test_...
+    STRIPE_PUBLISHABLE_KEY: str = ""      # pk_live_... or pk_test_...
+    STRIPE_WEBHOOK_SECRET: str = ""       # whsec_...  (from Stripe dashboard → Webhooks)
+    STRIPE_PRO_PRICE_ID: str = ""         # price_...  (monthly Pro recurring price)
+
     # ── Rate limiting (slowapi format: "N/period") ────────────────────────────
     RATE_LIMIT_PUBLIC: str = "60/minute"   # unauthenticated read endpoints
     RATE_LIMIT_BADGE: str = "120/minute"   # badge SVG (bots hit this a lot)

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <title>Account — Misconfig Index</title>
+  <meta name="description" content="Manage your Misconfig Index account, organizations, and API keys.">
+  <!-- Open Graph / Twitter Card -->
+  <meta property="og:type"         content="website">
+  <meta property="og:site_name"    content="Misconfig Index">
+  <meta property="og:title"        content="Account — Misconfig Index">
+  <meta property="og:description"  content="Manage your Misconfig Index account, organizations, and API keys.">
+  <meta property="og:url"          content="https://misconfig.dev/account/">
+  <meta property="og:image"        content="https://misconfig.dev/og-image.png">
+  <meta name="twitter:card"        content="summary">
+  <meta name="twitter:title"       content="Account — Misconfig Index">
+  <meta name="twitter:description" content="Manage your Misconfig Index account, organizations, and API keys.">
+  <meta name="twitter:image"       content="https://misconfig.dev/og-image.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a class="nav-logo" href="/">Misconfig<span>Index</span></a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Dashboard</a>
+        <a href="/docs/" class="nav-link">Docs</a>
+        <a href="/pricing/" class="nav-link">Pricing</a>
+        <a href="/account/" class="nav-link active">Account</a>
+      </div>
+      <a href="#" id="nav-signout" class="nav-cta" style="background:#1a2030;color:#9aa5b8;border:1px solid #1f2534;font-size:13px">Sign out</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Page header -->
+    <div class="acct-page-header">
+      <h1 class="acct-page-title">Account</h1>
+    </div>
+
+    <!-- Loading state -->
+    <div class="acct-loading" id="acct-loading">
+      <span class="qs-spinner"></span>
+      <span>Loading your account…</span>
+    </div>
+
+    <!-- User info panel -->
+    <section class="panel acct-user-panel" id="acct-user-panel" hidden>
+      <div class="acct-user-row">
+        <img id="acct-avatar" class="acct-avatar" src="" alt="GitHub avatar">
+        <div class="acct-user-info">
+          <h2 id="acct-login" class="acct-username"></h2>
+          <p id="acct-email" class="acct-email"></p>
+          <p id="acct-member" class="acct-member-since"></p>
+        </div>
+        <a href="https://github.com/settings/profile" target="_blank" rel="noopener" class="btn-secondary acct-gh-link">GitHub Profile →</a>
+      </div>
+    </section>
+
+    <!-- Plan & Billing -->
+    <section class="panel billing-panel" id="acct-billing-panel" hidden>
+      <div class="billing-header">
+        <div>
+          <h2 style="margin:0 0 4px 0">Plan &amp; Billing</h2>
+          <p class="acct-section-sub">Your current subscription.</p>
+        </div>
+        <div id="billing-plan-badge"></div>
+      </div>
+      <div id="billing-details"></div>
+      <div id="billing-actions" style="margin-top:16px"></div>
+    </section>
+
+    <!-- Organizations & API Keys -->
+    <section class="panel" id="acct-orgs-panel" hidden>
+      <div class="acct-section-header">
+        <div>
+          <h2 style="margin:0 0 4px 0">Organizations &amp; API Keys</h2>
+          <p class="acct-section-sub">API keys authenticate your CI/CD pipeline and CLI. The full key is shown only once — store it safely.</p>
+        </div>
+      </div>
+      <div id="acct-orgs-list"></div>
+    </section>
+
+    <!-- Your Repos -->
+    <section class="panel" id="acct-repos-panel" hidden>
+      <div class="acct-section-header">
+        <div>
+          <h2 style="margin:0 0 4px 0">Your Repos</h2>
+          <p class="acct-section-sub">Repos being tracked under your organizations.</p>
+        </div>
+      </div>
+      <div id="acct-repos-list"></div>
+      <div id="acct-repos-empty" hidden>
+        <p class="acct-empty">No repos tracked yet. Set up <a href="/docs/">the CI integration</a> or run the CLI to start tracking your infrastructure.</p>
+        <div style="margin-top:12px">
+          <a href="/docs/" class="btn-primary" style="font-size:13px;padding:8px 16px">View setup docs →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Danger zone -->
+    <section class="panel acct-danger-panel" id="acct-actions-panel" hidden>
+      <h2 style="margin:0 0 12px 0">Session</h2>
+      <p class="acct-section-sub">You're signed in via GitHub OAuth. Signing out removes your token from this browser only.</p>
+      <button class="acct-signout-btn" id="acct-signout-btn">Sign out of Misconfig Index</button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-brand-name">Misconfig<span>Index</span></p>
+        <p class="footer-brand-desc">IaC misconfiguration scanner — score, track, and benchmark your cloud security posture.</p>
+        <p class="footer-privacy-note">We store only scores and rule IDs. No source code is ever retained. <a href="/privacy/">Privacy policy</a></p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/">Dashboard</a></li>
+          <li><a href="/docs/">Documentation</a></li>
+          <li><a href="/pricing/">Pricing</a></li>
+          <li><a href="/account/">Account</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Developers</h4>
+        <ul>
+          <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
+          <li><a href="https://github.com/cjb00/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy/">Privacy Policy</a></li>
+          <li><a href="/terms/">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Misconfig Index. MIT License.</span>
+      <span>Built for security engineers, by security engineers.</span>
+    </div>
+  </footer>
+
+  <script src="/account/account.js"></script>
+</body>
+</html>

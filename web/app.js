@@ -505,16 +505,33 @@ function initQuickScan() {
     }
 
     // Only reach here with a valid-looking URL — safe to show loading
+    // Hide any stale result panel from a previous scan
+    const resultPanel = document.getElementById("qs-result");
+    if (resultPanel) resultPanel.hidden = true;
+
+    const loadingMsgEl = document.getElementById("qs-loading-msg");
+    if (loadingMsgEl) loadingMsgEl.textContent = "Downloading & scanning…";
+
     btn.disabled = true;
     loadingEl.hidden = false;
+
+    // Abort after 90 s; show a "still going" message after 15 s
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 90_000);
+    const slowTimer = setTimeout(() => {
+      if (loadingMsgEl) loadingMsgEl.textContent = "Still scanning (large repo)…";
+    }, 15_000);
 
     try {
       const res = await fetch(`${API_BASE}/reports/scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
+        signal: controller.signal,
       });
 
+      clearTimeout(abortTimer);
+      clearTimeout(slowTimer);
       loadingEl.hidden = true;
 
       if (!res.ok) {
@@ -528,13 +545,84 @@ function initQuickScan() {
       const data = await res.json();
       renderQuickScanResult(data);
     } catch (err) {
+      clearTimeout(abortTimer);
+      clearTimeout(slowTimer);
       loadingEl.hidden = true;
-      errorEl.textContent = `Network error: ${err.message}`;
+      if (err.name === "AbortError") {
+        errorEl.textContent = "Scan timed out — the repo may be too large. Try the CLI: pip install misconfig-index";
+      } else {
+        errorEl.textContent = `Network error: ${err.message}`;
+      }
       errorEl.hidden = false;
     } finally {
       btn.disabled = false;
     }
   });
+}
+
+
+// ── User repos panel (dashboard personalisation) ──────────────────────────────
+
+async function loadUserRepos(token) {
+  const panel = document.getElementById("user-repos-panel");
+  const listEl = document.getElementById("ur-list");
+  const subtitleEl = document.getElementById("ur-subtitle");
+  if (!panel) return;
+
+  try {
+    const orgRepos = await fetch(`${AUTH_API}/auth/my-repos`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => (r.ok ? r.json() : []));
+
+    // Flatten repos across orgs
+    const allRepos = orgRepos.flatMap((g) =>
+      g.repos.map((r) => ({ ...r, org_name: g.org_name, org_slug: g.org_slug }))
+    );
+
+    if (allRepos.length === 0) {
+      // User is logged in but has no repos tracked yet
+      subtitleEl.textContent = "No repos tracked yet";
+      listEl.innerHTML = `
+        <p style="color:#9aa5b8;font-size:14px;margin:8px 0 0">
+          Set up <a href="/docs/" style="color:#6366f1">the CI integration</a> or use the CLI to start tracking your IaC.
+        </p>`;
+      panel.hidden = false;
+      return;
+    }
+
+    // Show the panel
+    panel.hidden = false;
+    const totalScans = allRepos.reduce((s, r) => s + r.total_scans, 0);
+    subtitleEl.textContent = `${allRepos.length} repo${allRepos.length !== 1 ? "s" : ""} · ${totalScans} scan${totalScans !== 1 ? "s" : ""}`;
+
+    listEl.innerHTML = allRepos
+      .map((repo) => {
+        const color = GRADE_COLORS[repo.latest_grade] || "#64748b";
+        const grade = repo.latest_grade || "—";
+        const score = repo.latest_score !== null && repo.latest_score !== undefined
+          ? repo.latest_score
+          : "—";
+        const lastScan = repo.last_scanned_at
+          ? new Date(repo.last_scanned_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })
+          : "never";
+
+        return `
+          <div class="ur-repo-row">
+            <span class="ur-identifier">${escapeHtml(repo.identifier)}</span>
+            <span class="ur-grade" style="color:${color};border-color:${color}22;background:${color}11">${grade}</span>
+            <span class="ur-score">${score}<span class="ur-score-unit">/100</span></span>
+            <span class="ur-meta">${repo.total_scans} scan${repo.total_scans !== 1 ? "s" : ""}</span>
+            <span class="ur-meta ur-last">${lastScan}</span>
+          </div>`;
+      })
+      .join("");
+
+  } catch (err) {
+    console.warn("Failed to load user repos", err);
+  }
 }
 
 
@@ -620,6 +708,11 @@ async function initAuth() {
     }
   }
   authRenderNav(user);
+
+  // Load personalised repos panel when logged in
+  if (user && token) {
+    loadUserRepos(token);
+  }
 }
 
 

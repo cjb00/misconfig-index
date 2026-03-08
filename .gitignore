@@ -9,6 +9,7 @@ __pycache__/
 
 # Byte-compiled / logs
 *.log
+scan_results_*.txt
 
 # IDE
 .vscode/

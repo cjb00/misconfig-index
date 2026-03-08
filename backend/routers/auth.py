@@ -181,5 +181,25 @@ def me(current_user: User = Depends(get_current_user), db: Session = Depends(get
         "github_email": current_user.github_email,
         "avatar_url": current_user.avatar_url,
         "created_at": current_user.created_at,
+        "plan": current_user.plan or "free",
+        "plan_status": current_user.plan_status,
         "orgs": orgs,
     }
+
+
+@router.get("/my-repos")
+def my_repos(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Return all repos tracked under any org the authenticated user belongs to."""
+    from .. import crud
+
+    result = []
+    for uo in current_user.user_orgs:
+        repos = crud.get_repos(db, uo.org)
+        result.append({
+            "org_id": uo.org.id,
+            "org_name": uo.org.name,
+            "org_slug": uo.org.slug,
+            "role": uo.role,
+            "repos": repos,
+        })
+    return result

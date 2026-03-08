@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Don't index API or auth endpoints
+Disallow: /api/
+Disallow: /auth/
+Disallow: /billing/
+
+Sitemap: https://misconfig.dev/sitemap.xml

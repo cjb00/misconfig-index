@@ -33,7 +33,8 @@ RUN pip install --prefix=/install \
         "slowapi>=0.1.9" \
         "pyyaml>=6.0" \
         "httpx>=0.27.0" \
-        "PyJWT>=2.8.0"
+        "PyJWT>=2.8.0" \
+        "stripe>=7.0.0"
 
 
 # ── Stage 2: runtime image ────────────────────────────────────────────────────

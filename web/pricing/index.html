@@ -3,7 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <title>Pricing — Misconfig Index</title>
+  <meta name="description" content="Start free with 50 API ingests/month. Upgrade to Pro for unlimited scans, private repos, and Slack alerts. Self-host for free, forever.">
+  <!-- Open Graph / Twitter Card -->
+  <meta property="og:type"         content="website">
+  <meta property="og:site_name"    content="Misconfig Index">
+  <meta property="og:title"        content="Pricing — Misconfig Index">
+  <meta property="og:description"  content="Start free with 50 API ingests/month. Upgrade to Pro for unlimited scans, private repos, and Slack alerts. Self-host for free, forever.">
+  <meta property="og:url"          content="https://misconfig.dev/pricing/">
+  <meta property="og:image"        content="https://misconfig.dev/og-image.png">
+  <meta name="twitter:card"        content="summary">
+  <meta name="twitter:title"       content="Pricing — Misconfig Index">
+  <meta name="twitter:description" content="Start free with 50 API ingests/month. Upgrade to Pro for unlimited scans, private repos, and Slack alerts. Self-host for free, forever.">
+  <meta name="twitter:image"       content="https://misconfig.dev/og-image.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -76,7 +93,14 @@
             <li>Weekly score trend reports</li>
             <li>Priority email support</li>
           </ul>
-          <a href="mailto:hello@misconfig.dev?subject=Pro plan" class="plan-cta plan-cta-primary">Get started →</a>
+          <div class="waitlist-block" id="pro-waitlist-block">
+            <p class="waitlist-label">Pro is launching soon — join the waitlist:</p>
+            <div class="waitlist-row">
+              <input type="email" id="waitlist-email" class="waitlist-input" placeholder="you@company.com" autocomplete="email">
+              <button class="plan-cta plan-cta-primary waitlist-btn" id="waitlist-btn" onclick="joinWaitlist()">Notify me →</button>
+            </div>
+            <p class="waitlist-msg" id="waitlist-msg" hidden></p>
+          </div>
         </div>
 
         <!-- Enterprise -->
@@ -165,7 +189,7 @@
         <h4>Developers</h4>
         <ul>
           <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
-          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/cjb00/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
         </ul>
       </div>
@@ -182,5 +206,50 @@
       <span>Built for security engineers, by security engineers.</span>
     </div>
   </footer>
+  <script>
+    const AUTH_API = "https://api.misconfig.dev";
+
+    async function joinWaitlist() {
+      const emailEl = document.getElementById("waitlist-email");
+      const btn = document.getElementById("waitlist-btn");
+      const msg = document.getElementById("waitlist-msg");
+      const email = emailEl.value.trim();
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.textContent = "Please enter a valid email address.";
+        msg.style.color = "#f87171";
+        msg.hidden = false;
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Joining…";
+
+      try {
+        const res = await fetch(`${AUTH_API}/waitlist`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+
+        if (res.ok || res.status === 409) {
+          emailEl.hidden = true;
+          btn.hidden = true;
+          document.querySelector(".waitlist-label").textContent = "You're on the list!";
+          msg.textContent = "We'll email you when Pro launches. No spam, ever.";
+          msg.style.color = "#22c55e";
+          msg.hidden = false;
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Notify me →";
+        msg.textContent = "Something went wrong — please try again.";
+        msg.style.color = "#f87171";
+        msg.hidden = false;
+      }
+    }
+  </script>
 </body>
 </html>

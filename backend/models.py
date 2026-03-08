@@ -34,6 +34,12 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Billing — Stripe integration
+    plan = Column(String, nullable=False, default="free", server_default="free")
+    plan_status = Column(String, nullable=True)             # "active" | "past_due" | "canceled"
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True)
+
     user_orgs = relationship("UserOrg", back_populates="user")
 
 
@@ -179,3 +185,12 @@ class Finding(Base):
     scan = relationship("Scan", back_populates="findings")
     file = relationship("File", back_populates="findings")
     rule = relationship("MisconfigRule", back_populates="findings")
+
+
+class WaitlistEntry(Base):
+    """Pro plan waitlist — collected before LLC / billing is fully set up."""
+    __tablename__ = "waitlist"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, nullable=False, unique=True, index=True)
+    created_at = Column(DateTime, server_default=func.now())

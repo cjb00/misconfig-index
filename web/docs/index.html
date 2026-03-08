@@ -3,7 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <title>Documentation — Misconfig Index</title>
+  <meta name="description" content="Full documentation for Misconfig Index — CLI quickstart, API reference, GitHub Actions integration, badge embedding, and self-hosting guide.">
+  <!-- Open Graph / Twitter Card -->
+  <meta property="og:type"         content="website">
+  <meta property="og:site_name"    content="Misconfig Index">
+  <meta property="og:title"        content="Documentation — Misconfig Index">
+  <meta property="og:description"  content="Full documentation for Misconfig Index — CLI quickstart, API reference, GitHub Actions integration, badge embedding, and self-hosting guide.">
+  <meta property="og:url"          content="https://misconfig.dev/docs/">
+  <meta property="og:image"        content="https://misconfig.dev/og-image.png">
+  <meta name="twitter:card"        content="summary">
+  <meta name="twitter:title"       content="Documentation — Misconfig Index">
+  <meta name="twitter:description" content="Full documentation for Misconfig Index — CLI quickstart, API reference, GitHub Actions integration, badge embedding, and self-hosting guide.">
+  <meta name="twitter:image"       content="https://misconfig.dev/og-image.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -232,7 +249,8 @@ jobs:
         <!-- ── Scoring ── -->
         <h2 id="scoring">Scoring Explained</h2>
 
-        <p>Findings are weighted by severity and normalised by files scanned:</p>
+        <p>Each finding is weighted by severity. Weights are then normalised using a <strong>square-root of files scanned</strong> denominator so that large repos aren't unfairly penalised compared to tiny ones:</p>
+
         <table class="docs-table">
           <thead><tr><th>Severity</th><th>Weight</th></tr></thead>
           <tbody>
@@ -244,19 +262,26 @@ jobs:
         </table>
 
         <div class="code-block">
-          <code>score = clamp(0, 100 − (Σ weights / files_scanned) × 10)</code>
+          <code>penalty  = Σ severity_weights(findings)
+score    = clamp(0, 100 − (penalty / √files) × 3)</code>
         </div>
 
+        <p>The <code>× 3</code> scale factor is calibrated so that a single high-severity finding in a 10-file repo yields roughly 95/100 (grade A), while a repo with 10 critical findings in 50 files scores around 30/100 (grade F).</p>
+
+        <p>Category scores (Networking, Identity, Storage, etc.) use the same formula applied per-category and are displayed as the coloured bars in scan results.</p>
+
         <table class="docs-table">
-          <thead><tr><th>Grade</th><th>Score</th></tr></thead>
+          <thead><tr><th>Grade</th><th>Score</th><th>Meaning</th></tr></thead>
           <tbody>
-            <tr><td>A</td><td>≥ 90</td></tr>
-            <tr><td>B</td><td>≥ 75</td></tr>
-            <tr><td>C</td><td>≥ 60</td></tr>
-            <tr><td>D</td><td>≥ 40</td></tr>
-            <tr><td>F</td><td>&lt; 40</td></tr>
+            <tr><td><strong style="color:#22c55e">A</strong></td><td>≥ 90</td><td>Excellent — minor or no findings</td></tr>
+            <tr><td><strong style="color:#84cc16">B</strong></td><td>≥ 75</td><td>Good — a few issues to address</td></tr>
+            <tr><td><strong style="color:#eab308">C</strong></td><td>≥ 60</td><td>Fair — moderate security concerns</td></tr>
+            <tr><td><strong style="color:#f97316">D</strong></td><td>≥ 40</td><td>Poor — multiple significant findings</td></tr>
+            <tr><td><strong style="color:#ef4444">F</strong></td><td>&lt; 40</td><td>Critical — severe misconfigurations</td></tr>
           </tbody>
         </table>
+
+        <p>The scoring engine is open source — see <a href="https://github.com/cjb00/misconfig-index/blob/main/scanner/scoring.py" target="_blank" rel="noopener"><code>scanner/scoring.py</code></a> for the full implementation.</p>
 
         <!-- ── Supported IaC ── -->
         <h2 id="supported-iac">Supported IaC</h2>
@@ -276,7 +301,7 @@ jobs:
 
         <div class="code-block code-block--tall">
           <code># 1. Clone and configure
-git clone https://github.com/misconfig-index/misconfig-index
+git clone https://github.com/cjb00/misconfig-index
 cd misconfig-index
 cp .env.example .env
 # edit .env → set POSTGRES_PASSWORD, ENVIRONMENT=production
@@ -329,7 +354,7 @@ open http://localhost</code>
         <h4>Developers</h4>
         <ul>
           <li><a href="https://api.misconfig.dev/docs" target="_blank" rel="noopener">API Reference</a></li>
-          <li><a href="https://github.com/misconfig-index/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/cjb00/misconfig-index" target="_blank" rel="noopener">GitHub</a></li>
           <li><a href="https://pypi.org/project/misconfig-index/" target="_blank" rel="noopener">PyPI</a></li>
         </ul>
       </div>
