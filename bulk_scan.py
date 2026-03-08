@@ -82,6 +82,7 @@ EXCLUDE_DIRS = frozenset({
     ".github", "vendor", "node_modules", ".terraform",
     "docs", "doc", "demo",     # avoid scanning documentation examples
     "wrappers",                 # auto-generated wrapper modules (terraform-aws-modules pattern)
+    "samples", "sample",        # intentional demo/example misconfigs (e.g. misconfig-index itself)
 })
 
 GIT_CLONE_TIMEOUT = 600   # seconds — large repos can be slow to clone
