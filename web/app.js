@@ -21,6 +21,23 @@ const SEVERITY_COLORS = {
   low: "#64748b",
 };
 
+const RULE_LABELS = {
+  TF_OPEN_SG_0_0_0_0:      "Security group open to 0.0.0.0/0",
+  TF_OPEN_SG_ALL_TRAFFIC:   "Security group allows all traffic",
+  K8S_NO_RESOURCE_LIMITS:   "No CPU/memory resource limits",
+  K8S_PRIVILEGED_CONTAINER: "Container running in privileged mode",
+  K8S_LATEST_TAG:           "Container image uses :latest tag",
+  K8S_IMAGE_LATEST_TAG:     "Container image uses :latest tag",
+  K8S_RUN_AS_ROOT:          "Container runs as root (UID 0)",
+  K8S_WRITABLE_ROOT_FS:     "Writable root filesystem",
+  K8S_HOST_NETWORK:         "hostNetwork or hostPID enabled",
+  TF_IAM_WILDCARD:          "IAM wildcard resource (*)",
+  TF_IAM_WILDCARD_HCL:      "IAM wildcard resource in HCL policy",
+  DOCKER_LATEST_TAG:        "Dockerfile uses :latest base image",
+  DOCKER_ROOT_USER:         "Dockerfile runs as root user",
+};
+function ruleLabel(id) { return RULE_LABELS[id] || id; }
+
 // Valid GitHub repo URL pattern (client-side pre-check before hitting the API)
 // Accepts: github.com/owner/repo, https://github.com/owner/repo, owner/repo
 const GH_REPO_RE =
@@ -90,7 +107,8 @@ function renderStats(data) {
   topRulesEl.innerHTML = "";
   (data.top_5_rules || []).forEach((item) => {
     const li = document.createElement("li");
-    li.textContent = `${item.rule_id}: ${item.count}`;
+    li.innerHTML = `<span class="rule-label">${ruleLabel(item.rule_id)}</span>` +
+                   `<span class="rule-meta">${item.rule_id} · ${item.count}</span>`;
     topRulesEl.appendChild(li);
   });
 
@@ -103,6 +121,8 @@ function renderStats(data) {
     li.innerHTML = `<span class="sev-dot" style="background:${SEVERITY_COLORS[sev] || '#64748b'}"></span>${sev}: <strong>${severities[sev]}</strong>`;
     severityEl.appendChild(li);
   });
+  document.getElementById("severity-stat").style.display =
+    severityEl.children.length > 0 ? "" : "none";
 }
 
 // ── Trend sparkline ───────────────────────────────────────────────────────────
@@ -314,7 +334,7 @@ function renderBenchmark(data) {
           const barW = Math.round((item.count / maxCount) * 100);
           return `
             <li class="top-mc-row">
-              <span class="top-mc-rule" title="${item.rule_id}">${item.rule_id}</span>
+              <span class="top-mc-rule">${ruleLabel(item.rule_id)}</span><span class="top-mc-rule-sub">${item.rule_id}</span>
               <div class="top-mc-bar-wrap">
                 <div class="top-mc-bar" style="width:${barW}%"></div>
               </div>
@@ -430,9 +450,10 @@ function renderQuickScanResult(data) {
         const loc = f.line_start ? `${f.file}:${f.line_start}` : f.file;
         return `<li class="qs-finding">
           <div class="qs-finding-header">
-            <code class="qs-rule-id">${f.rule_id}</code>
+            <span class="qs-rule-label">${escapeHtml(ruleLabel(f.rule_id))}</span>
             <span class="qs-finding-loc" title="${f.file}">${loc}</span>
           </div>
+          <code class="qs-rule-id">${escapeHtml(f.rule_id)}</code>
           ${f.snippet ? `<code class="qs-snippet">${escapeHtml(f.snippet)}</code>` : ""}
           ${f.remediation ? `<p class="qs-remediation">→ ${escapeHtml(f.remediation)}</p>` : ""}
         </li>`;
