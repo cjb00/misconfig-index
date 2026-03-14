@@ -240,7 +240,7 @@ def ingest_scan(db: Session, org: Organization, payload) -> Dict[str, Any]:
                 rule_id=f.rule_id,
                 line_start=f.line_start,
                 line_end=f.line_end,
-                snippet=f.snippet,
+                snippet=None,  # never persist source code
             ))
 
     db.commit()
