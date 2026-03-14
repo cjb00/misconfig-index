@@ -32,8 +32,10 @@ const RULE_LABELS = {
   K8S_WRITABLE_ROOT_FS:     "Writable root filesystem",
   K8S_HOST_NETWORK:         "hostNetwork or hostPID enabled",
   TF_IAM_WILDCARD:          "IAM wildcard resource (*)",
-  TF_IAM_WILDCARD_HCL:      "IAM wildcard resource in HCL policy",
-  DOCKER_LATEST_TAG:        "Dockerfile uses :latest base image",
+  TF_IAM_WILDCARD_HCL:              "IAM wildcard resource in HCL policy",
+  TF_IAM_WILDCARD_RESOURCES_HCL:   "IAM wildcard resource in HCL policy",
+  TF_SG_ALL_TRAFFIC:               "Security group allows all traffic (protocol -1)",
+  DOCKER_LATEST_TAG:               "Dockerfile uses :latest base image",
   DOCKER_ROOT_USER:         "Dockerfile runs as root user",
 };
 function ruleLabel(id) { return RULE_LABELS[id] || id; }
