@@ -1730,7 +1730,7 @@ ul {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  border: 3px solid #4f6bff;
+  border: 3px solid #2a3347;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2911,3 +2911,20 @@ ul {
 
 /* Benchmark "grows as more repos are connected" note */
 .bm-grow-note { font-size: 11px; color: #4a5568; margin: 0 0 16px; }
+
+/* Percentile line beneath grade label */
+.score-percentile {
+  font-size: 11px;
+  color: #4a5568;
+  margin-top: 5px;
+  text-align: center;
+  max-width: 140px;
+  line-height: 1.3;
+}
+
+.qs-percentile {
+  font-size: 11px;
+  color: #4a5568;
+  margin-top: 3px;
+  line-height: 1.3;
+}

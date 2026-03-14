@@ -38,6 +38,37 @@ const RULE_LABELS = {
 };
 function ruleLabel(id) { return RULE_LABELS[id] || id; }
 
+// Benchmark data cached on load — used by percentile calculations
+let _benchmarkCache = null;
+
+function calcPercentile(score, dist) {
+  const total = (dist.A||0)+(dist.B||0)+(dist.C||0)+(dist.D||0)+(dist.F||0);
+  if (total < 5) return null;
+  const bands = [[90,101,'A'],[80,90,'B'],[70,80,'C'],[40,70,'D'],[0,40,'F']];
+  const [min, max, key] = bands.find(([lo,hi]) => score >= lo && score < hi) || [90,101,'A'];
+  const below = {
+    F: 0,
+    D: (dist.F||0),
+    C: (dist.F||0)+(dist.D||0),
+    B: (dist.F||0)+(dist.D||0)+(dist.C||0),
+    A: (dist.F||0)+(dist.D||0)+(dist.C||0)+(dist.B||0),
+  }[key];
+  const frac = (score - min) / (max - min);
+  return Math.min(100, Math.max(0, Math.round(((below + (dist[key]||0) * frac) / total) * 100)));
+}
+
+function renderPercentileEl(score, elId, dist) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!dist) { el.hidden = true; return; }
+  const pct = calcPercentile(score, dist);
+  if (pct === null) { el.hidden = true; return; }
+  el.hidden = false;
+  if (pct >= 100)    el.textContent = "Top score in the community";
+  else if (pct <= 0) el.textContent = "Scores lower than all tracked repos";
+  else               el.textContent = `Scores better than ${pct}% of tracked repos`;
+}
+
 // Valid GitHub repo URL pattern (client-side pre-check before hitting the API)
 // Accepts: github.com/owner/repo, https://github.com/owner/repo, owner/repo
 const GH_REPO_RE =
@@ -66,6 +97,7 @@ function renderScore(data) {
   gradeEl.style.color = color;
   circleEl.style.borderColor = color;
   circleEl.style.boxShadow = `0 0 24px ${color}33`;
+  renderPercentileEl(score, "score-percentile", _benchmarkCache?.grade_distribution);
 
   // Category breakdown bars
   const breakdown = data.score_breakdown || {};
@@ -390,6 +422,7 @@ async function loadBenchmark() {
     const res = await fetch(`${API_BASE}/reports/benchmark`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    _benchmarkCache = data;
     renderBenchmark(data);
   } catch (err) {
     console.warn("Failed to load benchmark data.", err);
@@ -416,6 +449,7 @@ function renderQuickScanResult(data) {
   const gradeEl = document.getElementById("qs-grade");
   gradeEl.textContent = `Grade ${data.grade}`;
   gradeEl.style.color = color;
+  renderPercentileEl(data.score, "qs-percentile", _benchmarkCache?.grade_distribution);
 
   document.getElementById("qs-meta").textContent =
     `${data.total_files_scanned} files · ${data.total_findings} finding${data.total_findings !== 1 ? "s" : ""}`;
