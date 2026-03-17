@@ -63,6 +63,50 @@ def _resource_blocks(content: str, resource_type: str) -> list[tuple[str, str, i
     return results
 
 
+def _sub_blocks(block_content: str, sub_block_name: str) -> list[tuple[str, int]]:
+    """Return (sub_block_content, offset) for named sub-blocks within a block.
+
+    Used to extract ingress/ebs_block_device/image_scanning_configuration etc.
+    """
+    pattern = re.compile(rf"\b{re.escape(sub_block_name)}\s*\{{")
+    results: list[tuple[str, int]] = []
+    for m in pattern.finditer(block_content):
+        depth = 0
+        for i in range(m.start(), len(block_content)):
+            if block_content[i] == "{":
+                depth += 1
+            elif block_content[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    results.append((block_content[m.start() : i + 1], m.start()))
+                    break
+    return results
+
+
+_FROM_PORT_RE = re.compile(r"from_port\s*=\s*(\d+)", re.IGNORECASE)
+_TO_PORT_RE = re.compile(r"to_port\s*=\s*(\d+)", re.IGNORECASE)
+_CIDR_OPEN_RE = re.compile(r"0\.0\.0\.0/0")
+_IPV6_OPEN_RE = re.compile(r"::/0")
+_TYPE_INGRESS_RE = re.compile(r'\btype\s*=\s*"ingress"', re.IGNORECASE)
+_ENCRYPTED_TRUE_RE = re.compile(r"encrypted\s*=\s*true", re.IGNORECASE)
+_SCAN_ON_PUSH_TRUE_RE = re.compile(r"scan_on_push\s*=\s*true", re.IGNORECASE)
+_KEY_ROTATION_TRUE_RE = re.compile(r"enable_key_rotation\s*=\s*true", re.IGNORECASE)
+
+
+def _port_in_range(block: str, port: int) -> bool:
+    """Return True if from_port <= port <= to_port in the given block."""
+    fm = _FROM_PORT_RE.search(block)
+    tm = _TO_PORT_RE.search(block)
+    if not fm or not tm:
+        return False
+    return int(fm.group(1)) <= port <= int(tm.group(1))
+
+
+def _open_to_internet(block: str) -> bool:
+    """Return True if block contains 0.0.0.0/0 or ::/0."""
+    return bool(_CIDR_OPEN_RE.search(block) or _IPV6_OPEN_RE.search(block))
+
+
 class _S(Rule, ABC):
     """
     SimplePatternRule mixin — fires one Finding per regex match.
@@ -122,18 +166,112 @@ class TfSgSshOpen(_S):
     )
 
 
-class TfSgRdpOpen(_S):
+class TfSgSshOpenInternet(Rule):
+    id = "TF_SG_SSH_OPEN"
+    category = "networking"
+    title = "Security group allows SSH (port 22) from the internet"
+    description = (
+        "Detects aws_security_group and aws_security_group_rule resources with "
+        "an ingress rule covering port 22 open to 0.0.0.0/0 or ::/0. "
+        "Handles port ranges (e.g. from_port=0, to_port=65535)."
+    )
+    severity = Severity.critical
+    tags = ["terraform", "network", "security-group", "ssh"]
+    remediation = (
+        "Restrict SSH access to known IP ranges. "
+        "Use a VPN or bastion host instead of exposing port 22 to the internet."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_security_group"):
+            for sub_content, _ in _sub_blocks(block_content, "ingress"):
+                if _port_in_range(sub_content, 22) and _open_to_internet(sub_content):
+                    line_start, _ = _find_line_numbers(content, start)
+                    snippet = lines[line_start - 1].strip() if lines else ""
+                    findings.append(
+                        Finding(
+                            rule_id=self.id,
+                            line_start=line_start,
+                            line_end=line_start,
+                            snippet=snippet,
+                            extra={"filename": filename},
+                        )
+                    )
+                    break  # one finding per resource
+        for _, block_content, start in _resource_blocks(content, "aws_security_group_rule"):
+            if (
+                _TYPE_INGRESS_RE.search(block_content)
+                and _port_in_range(block_content, 22)
+                and _open_to_internet(block_content)
+            ):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
+class TfSgRdpOpen(Rule):
     id = "TF_SG_RDP_OPEN"
     category = "networking"
-    title = "Security group allows RDP (port 3389) from 0.0.0.0/0"
-    description = "Detects ingress rules that expose RDP to the internet."
+    title = "Security group allows RDP (port 3389) from the internet"
+    description = (
+        "Detects aws_security_group and aws_security_group_rule resources with "
+        "an ingress rule covering port 3389 open to 0.0.0.0/0 or ::/0. "
+        "Handles port ranges (e.g. from_port=0, to_port=65535)."
+    )
     severity = Severity.critical
     tags = ["terraform", "network", "security-group", "rdp"]
-    remediation = "Remove public RDP access. Use a VPN, bastion host, or AWS Systems Manager for remote access."
-    pattern = re.compile(
-        r"ingress\s*{[^}]*from_port\s*=\s*3389[^}]*0\.0\.0\.0/0[^}]*}",
-        re.IGNORECASE | re.DOTALL,
+    remediation = (
+        "Restrict RDP access to known IP ranges. "
+        "Use a VPN instead of exposing port 3389 to the internet."
     )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_security_group"):
+            for sub_content, _ in _sub_blocks(block_content, "ingress"):
+                if _port_in_range(sub_content, 3389) and _open_to_internet(sub_content):
+                    line_start, _ = _find_line_numbers(content, start)
+                    snippet = lines[line_start - 1].strip() if lines else ""
+                    findings.append(
+                        Finding(
+                            rule_id=self.id,
+                            line_start=line_start,
+                            line_end=line_start,
+                            snippet=snippet,
+                            extra={"filename": filename},
+                        )
+                    )
+                    break
+        for _, block_content, start in _resource_blocks(content, "aws_security_group_rule"):
+            if (
+                _TYPE_INGRESS_RE.search(block_content)
+                and _port_in_range(block_content, 3389)
+                and _open_to_internet(block_content)
+            ):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
 
 
 class TfSgAllTraffic(_S):
@@ -466,6 +604,53 @@ class TfEbsNoEncryption(_S):
     )
 
 
+class TfEbsEncryptionDisabled(Rule):
+    id = "TF_EBS_ENCRYPTION_DISABLED"
+    category = "storage"
+    title = "EBS volume encryption disabled or not configured"
+    description = (
+        "Detects aws_ebs_volume resources where encrypted is false or absent, "
+        "and aws_instance ebs_block_device blocks without encrypted = true. "
+        "The default for both is unencrypted."
+    )
+    severity = Severity.high
+    tags = ["terraform", "ebs", "encryption"]
+    remediation = "Set encrypted = true on all EBS volumes to protect data at rest."
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_ebs_volume"):
+            if not _ENCRYPTED_TRUE_RE.search(block_content):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        for _, block_content, start in _resource_blocks(content, "aws_instance"):
+            for sub_content, sub_offset in _sub_blocks(block_content, "ebs_block_device"):
+                if not _ENCRYPTED_TRUE_RE.search(sub_content):
+                    abs_start = start + sub_offset
+                    line_start, _ = _find_line_numbers(content, abs_start)
+                    snippet = lines[line_start - 1].strip() if lines else ""
+                    findings.append(
+                        Finding(
+                            rule_id=self.id,
+                            line_start=line_start,
+                            line_end=line_start,
+                            snippet=snippet,
+                            extra={"filename": filename},
+                        )
+                    )
+        return findings
+
+
 # ── Database ──────────────────────────────────────────────────────────────────
 
 
@@ -614,6 +799,43 @@ class TfEc2Imdsv1(_S):
     pattern = re.compile(r'http_tokens\s*=\s*"optional"', re.IGNORECASE)
 
 
+class TfEcrImageScanDisabled(Rule):
+    id = "TF_ECR_IMAGE_SCAN_DISABLED"
+    category = "workload"
+    title = "ECR repository image scanning on push disabled"
+    description = (
+        "Detects aws_ecr_repository resources where image_scanning_configuration "
+        "is missing or scan_on_push is not true."
+    )
+    severity = Severity.medium
+    tags = ["terraform", "ecr", "image-scanning"]
+    remediation = (
+        "Enable scan_on_push in image_scanning_configuration to automatically "
+        "scan images for vulnerabilities on upload."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_ecr_repository"):
+            scan_blocks = _sub_blocks(block_content, "image_scanning_configuration")
+            if not scan_blocks or not any(
+                _SCAN_ON_PUSH_TRUE_RE.search(sb) for sb, _ in scan_blocks
+            ):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
 # ── Logging ───────────────────────────────────────────────────────────────────
 
 
@@ -648,6 +870,61 @@ class TfAlbAccessLogsDisabled(_S):
     )
 
 
+class TfCloudtrailDisabled(_S):
+    id = "TF_CLOUDTRAIL_DISABLED"
+    category = "logging"
+    title = "CloudTrail logging explicitly disabled"
+    description = (
+        "Detects aws_cloudtrail resources with enable_logging = false. "
+        "The default is true, so this only fires on explicit disablement."
+    )
+    severity = Severity.high
+    tags = ["terraform", "cloudtrail", "logging"]
+    remediation = (
+        "Set enable_logging = true to ensure AWS API activity is being recorded."
+    )
+    pattern = re.compile(
+        r'resource\s+"aws_cloudtrail"\s+".+?"\s*\{[^}]*enable_logging\s*=\s*false',
+        re.IGNORECASE | re.DOTALL,
+    )
+
+
+# ── Encryption ────────────────────────────────────────────────────────────────
+
+
+class TfKmsRotationDisabled(Rule):
+    id = "TF_KMS_ROTATION_DISABLED"
+    category = "identity"
+    title = "KMS key rotation disabled or not configured"
+    description = (
+        "Detects aws_kms_key resources where enable_key_rotation is false or "
+        "absent. The default is false, leaving keys without annual rotation."
+    )
+    severity = Severity.medium
+    tags = ["terraform", "kms", "encryption"]
+    remediation = (
+        "Set enable_key_rotation = true to automatically rotate KMS keys annually."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_kms_key"):
+            if not _KEY_ROTATION_TRUE_RE.search(block_content):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 
@@ -656,6 +933,7 @@ def get_rules() -> List[Rule]:
         # Networking
         TfOpenSecurityGroup(),
         TfSgSshOpen(),
+        TfSgSshOpenInternet(),
         TfSgRdpOpen(),
         TfSgAllTraffic(),
         TfEksPublicEndpoint(),
@@ -675,6 +953,7 @@ def get_rules() -> List[Rule]:
         TfS3PublicAccessNotBlocked(),
         TfS3EncryptionDisabled(),
         TfEbsNoEncryption(),
+        TfEbsEncryptionDisabled(),
         # Database
         TfRdsNoEncryption(),
         TfRdsPubliclyAccessible(),
@@ -684,7 +963,11 @@ def get_rules() -> List[Rule]:
         TfRdsStorageEncryptedDisabled(),
         # Workload
         TfEc2Imdsv1(),
+        TfEcrImageScanDisabled(),
         # Logging
         TfCloudtrailNoLogValidation(),
         TfAlbAccessLogsDisabled(),
+        TfCloudtrailDisabled(),
+        # Encryption
+        TfKmsRotationDisabled(),
     ]

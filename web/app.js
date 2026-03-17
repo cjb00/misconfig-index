@@ -43,6 +43,12 @@ const RULE_LABELS = {
   TF_RDS_PUBLICLY_ACCESSIBLE:           "RDS instance publicly accessible",
   TF_RDS_DELETION_PROTECTION_DISABLED:  "RDS deletion protection disabled",
   TF_RDS_STORAGE_ENCRYPTED_DISABLED:    "RDS storage encryption disabled",
+  TF_SG_SSH_OPEN:                       "SSH port 22 open to the internet",
+  TF_SG_RDP_OPEN:                       "RDP port 3389 open to the internet",
+  TF_EBS_ENCRYPTION_DISABLED:           "EBS volume encryption disabled",
+  TF_ECR_IMAGE_SCAN_DISABLED:           "ECR image scanning on push disabled",
+  TF_CLOUDTRAIL_DISABLED:               "CloudTrail logging disabled",
+  TF_KMS_ROTATION_DISABLED:             "KMS key rotation disabled",
 };
 function ruleLabel(id) { return RULE_LABELS[id] || id; }
 
