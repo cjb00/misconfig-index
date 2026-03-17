@@ -255,6 +255,307 @@ class K8sReadOnlyRootFsDisabled(Rule):
         return findings
 
 
+class K8sNoLivenessProbe(Rule):
+    id = "K8S_NO_LIVENESS_PROBE"
+    category = "reliability"
+    title = "Container has no liveness probe"
+    description = (
+        "Detects pod specs that define containers but no livenessProbe. "
+        "Without a liveness probe Kubernetes cannot detect and restart stuck containers."
+    )
+    severity = Severity.medium
+    tags = ["kubernetes", "reliability", "probes"]
+    remediation = (
+        "Define a livenessProbe for each container so Kubernetes can restart "
+        "unhealthy containers automatically."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        if "containers:" not in content or "livenessProbe:" in content:
+            return []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            # Match `containers:` but not `initContainers:`
+            if re.search(r"(?<!init)containers:", line):
+                return [
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                ]
+        return []
+
+
+class K8sNoReadinessProbe(Rule):
+    id = "K8S_NO_READINESS_PROBE"
+    category = "reliability"
+    title = "Container has no readiness probe"
+    description = (
+        "Detects pod specs that define containers but no readinessProbe. "
+        "Without a readiness probe Kubernetes may route traffic to containers that "
+        "are not yet ready."
+    )
+    severity = Severity.medium
+    tags = ["kubernetes", "reliability", "probes"]
+    remediation = (
+        "Define a readinessProbe for each container so Kubernetes only routes "
+        "traffic to containers that are ready to serve requests."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        if "containers:" not in content or "readinessProbe:" in content:
+            return []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if re.search(r"(?<!init)containers:", line):
+                return [
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                ]
+        return []
+
+
+class K8sAutomountServiceAccountToken(Rule):
+    id = "K8S_AUTOMOUNT_SERVICE_ACCOUNT_TOKEN"
+    category = "identity"
+    title = "Service account token auto-mounted"
+    description = (
+        "Detects pod specs that do not explicitly opt out of auto-mounting the "
+        "service account token (automountServiceAccountToken defaults to true). "
+        "Only flagged when no custom serviceAccountName is set."
+    )
+    severity = Severity.medium
+    tags = ["kubernetes", "pod-security", "rbac"]
+    remediation = (
+        "Set automountServiceAccountToken: false if the pod does not need to "
+        "communicate with the Kubernetes API."
+    )
+
+    _opt_out_re = re.compile(r"automountServiceAccountToken:\s*false", re.IGNORECASE)
+    _custom_sa_re = re.compile(r"serviceAccountName:\s+(?!default\b)\S+")
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        if "containers:" not in content:
+            return []
+        if self._opt_out_re.search(content):
+            return []
+        if self._custom_sa_re.search(content):
+            return []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if re.search(r"(?<!init)containers:", line):
+                return [
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                ]
+        return []
+
+
+class K8sPrivilegeEscalationAllowed(Rule):
+    id = "K8S_PRIVILEGE_ESCALATION_ALLOWED"
+    category = "workload"
+    title = "Container allows privilege escalation"
+    description = (
+        "Detects container specs where allowPrivilegeEscalation is true or absent. "
+        "The default is true, allowing processes inside the container to gain more "
+        "privileges than the parent process."
+    )
+    severity = Severity.high
+    tags = ["kubernetes", "pod-security"]
+    remediation = (
+        "Set allowPrivilegeEscalation: false in the container securityContext to "
+        "prevent privilege escalation attacks."
+    )
+
+    _explicit_true_re = re.compile(r"allowPrivilegeEscalation:\s*true", re.IGNORECASE)
+    _opt_out_re = re.compile(r"allowPrivilegeEscalation:\s*false", re.IGNORECASE)
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+
+        # Explicit true → flag that line
+        for idx, line in enumerate(lines, start=1):
+            if self._explicit_true_re.search(line):
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                )
+
+        # Absent → flag at containers: line
+        if not findings and "containers:" in content and not self._opt_out_re.search(content):
+            for idx, line in enumerate(lines, start=1):
+                if re.search(r"(?<!init)containers:", line):
+                    findings.append(
+                        Finding(
+                            rule_id=self.id,
+                            line_start=idx,
+                            line_end=idx,
+                            snippet=line.strip(),
+                            extra={"filename": filename},
+                        )
+                    )
+                    break
+
+        return findings
+
+
+class K8sSecretAsEnvVar(Rule):
+    id = "K8S_SECRET_AS_ENV_VAR"
+    category = "storage"
+    title = "Secret referenced as environment variable"
+    description = (
+        "Detects containers referencing Kubernetes secrets as environment variables "
+        "via valueFrom.secretKeyRef. Environment variables are visible in process "
+        "listings and crash dumps."
+    )
+    severity = Severity.medium
+    tags = ["kubernetes", "secrets", "best-practice"]
+    remediation = (
+        "Mount secrets as volumes instead of environment variables. Environment "
+        "variables are visible in process listings and crash dumps."
+    )
+
+    pattern = re.compile(r"\bsecretKeyRef\b")
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if self.pattern.search(line):
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
+class K8sNoPodSecurityContext(Rule):
+    id = "K8S_NO_POD_SECURITY_CONTEXT"
+    category = "workload"
+    title = "No pod-level security context defined"
+    description = (
+        "Detects pod specs that define containers but no top-level securityContext. "
+        "A pod security context establishes a baseline for all containers."
+    )
+    severity = Severity.medium
+    tags = ["kubernetes", "pod-security"]
+    remediation = (
+        "Define a pod-level securityContext with runAsNonRoot: true, runAsUser, "
+        "and seccompProfile to establish a security baseline."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        if "containers:" not in content or "securityContext:" in content:
+            return []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if re.search(r"(?<!init)containers:", line):
+                return [
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                ]
+        return []
+
+
+class K8sHostPathMount(Rule):
+    id = "K8S_HOST_PATH_MOUNT"
+    category = "workload"
+    title = "Pod mounts host filesystem path"
+    description = (
+        "Detects pods with a hostPath volume, which allows containers to access "
+        "and modify the host node filesystem."
+    )
+    severity = Severity.high
+    tags = ["kubernetes", "volumes", "hostpath"]
+    remediation = (
+        "Avoid hostPath volumes — they allow containers to access and modify the "
+        "host filesystem. Use PersistentVolumeClaims instead."
+    )
+
+    pattern = re.compile(r"\bhostPath\s*:")
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if self.pattern.search(line):
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
+class K8sIngressNoTls(Rule):
+    id = "K8S_INGRESS_NO_TLS"
+    category = "networking"
+    title = "Ingress resource has no TLS configured"
+    description = (
+        "Detects Kubernetes Ingress resources without a tls field. "
+        "Without TLS, traffic to the ingress is sent in plaintext."
+    )
+    severity = Severity.high
+    tags = ["kubernetes", "ingress", "tls"]
+    remediation = (
+        "Configure TLS on all Ingress resources using a valid certificate. "
+        "Use cert-manager for automated certificate management."
+    )
+
+    _kind_re = re.compile(r"^\s*kind:\s*Ingress\b", re.MULTILINE)
+    _tls_re = re.compile(r"\btls\s*:")
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        if not self._kind_re.search(content) or self._tls_re.search(content):
+            return []
+        lines = content.splitlines()
+        for idx, line in enumerate(lines, start=1):
+            if self._kind_re.search(line):
+                return [
+                    Finding(
+                        rule_id=self.id,
+                        line_start=idx,
+                        line_end=idx,
+                        snippet=line.strip(),
+                        extra={"filename": filename},
+                    )
+                ]
+        return []
+
+
 def get_rules() -> List[Rule]:
     return [
         K8sRunAsRoot(),
@@ -265,4 +566,12 @@ def get_rules() -> List[Rule]:
         K8sImageLatestTag(),
         K8sNoResourceLimits(),
         K8sReadOnlyRootFsDisabled(),
+        K8sNoLivenessProbe(),
+        K8sNoReadinessProbe(),
+        K8sAutomountServiceAccountToken(),
+        K8sPrivilegeEscalationAllowed(),
+        K8sSecretAsEnvVar(),
+        K8sNoPodSecurityContext(),
+        K8sHostPathMount(),
+        K8sIngressNoTls(),
     ]
