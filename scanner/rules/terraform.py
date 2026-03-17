@@ -15,6 +15,8 @@ def _find_line_numbers(content: str, match_start: int) -> tuple[int, int]:
 
 
 _VAR_BLOCK_RE = re.compile(r'\bvariable\s+"[^"]*"\s*\{')
+_RESOURCE_BLOCK_RE = re.compile(r'resource\s+"([^"]+)"\s+"([^"]+)"\s*\{')
+_BUCKET_REF_RE = re.compile(r'aws_s3_bucket\.([a-zA-Z0-9_\-]+)\.')
 
 
 def _variable_block_spans(content: str) -> list[tuple[int, int]]:
@@ -36,6 +38,29 @@ def _variable_block_spans(content: str) -> list[tuple[int, int]]:
                     spans.append((m.start(), i))
                     break
     return spans
+
+
+def _resource_blocks(content: str, resource_type: str) -> list[tuple[str, str, int]]:
+    """Return (logical_name, block_content, block_start) for each resource of given type.
+
+    Uses brace-counting to find the full block extent, same approach as
+    _variable_block_spans.
+    """
+    results: list[tuple[str, str, int]] = []
+    for m in _RESOURCE_BLOCK_RE.finditer(content):
+        if m.group(1) != resource_type:
+            continue
+        logical_name = m.group(2)
+        depth = 0
+        for i in range(m.start(), len(content)):
+            if content[i] == "{":
+                depth += 1
+            elif content[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    results.append((logical_name, content[m.start() : i + 1], m.start()))
+                    break
+    return results
 
 
 class _S(Rule, ABC):
@@ -283,21 +308,148 @@ class TfS3PublicAccessBlockDisabled(_S):
     )
 
 
-class TfS3VersioningDisabled(_S):
+class TfS3VersioningDisabled(Rule):
     id = "TF_S3_VERSIONING_DISABLED"
     category = "storage"
-    title = "S3 bucket versioning explicitly disabled"
+    title = "S3 bucket versioning disabled or not configured"
     description = (
-        "Detects S3 versioning blocks with enabled = false. Without versioning, "
-        "accidental deletes and overwrites cannot be recovered."
+        "Detects S3 buckets without versioning enabled. Covers both the legacy "
+        "versioning { enabled = false } block and the modern aws_s3_bucket_versioning "
+        "resource when status is not 'Enabled' or is absent."
     )
     severity = Severity.medium
     tags = ["terraform", "s3", "versioning"]
-    remediation = "Set versioning { enabled = true } to enable object version history and point-in-time recovery."
-    pattern = re.compile(
+    remediation = (
+        "Enable versioning on this S3 bucket to protect against accidental deletion "
+        "and overwrites."
+    )
+
+    _old_style_re = re.compile(
         r"versioning\s*{\s*[^}]*enabled\s*=\s*false",
         re.IGNORECASE | re.DOTALL,
     )
+    _status_enabled_re = re.compile(r'status\s*=\s*"Enabled"', re.IGNORECASE)
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        var_spans = _variable_block_spans(content)
+        findings: List[Finding] = []
+        lines = content.splitlines()
+
+        # Old-style: versioning { enabled = false } inside any resource block
+        for m in self._old_style_re.finditer(content):
+            if any(s <= m.start() <= e for s, e in var_spans):
+                continue
+            line_start, _ = _find_line_numbers(content, m.start())
+            snippet = lines[line_start - 1].strip() if lines else ""
+            findings.append(
+                Finding(
+                    rule_id=self.id,
+                    line_start=line_start,
+                    line_end=line_start,
+                    snippet=snippet,
+                    extra={"filename": filename},
+                )
+            )
+
+        # New-style: aws_s3_bucket_versioning resource without status = "Enabled"
+        for _, block_content, start in _resource_blocks(content, "aws_s3_bucket_versioning"):
+            if not self._status_enabled_re.search(block_content):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+
+        return findings
+
+
+class TfS3PublicAccessNotBlocked(Rule):
+    id = "TF_S3_PUBLIC_ACCESS_NOT_BLOCKED"
+    category = "storage"
+    title = "S3 bucket has no public access block configured"
+    description = (
+        "Detects aws_s3_bucket resources with no associated "
+        "aws_s3_bucket_public_access_block resource. Without this block, the bucket "
+        "may be exposed to public ACLs or policies."
+    )
+    severity = Severity.high
+    tags = ["terraform", "s3", "public-access-block"]
+    remediation = (
+        "Enable all four public access block settings on "
+        "aws_s3_bucket_public_access_block to prevent public exposure."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        bucket_blocks = _resource_blocks(content, "aws_s3_bucket")
+        block_blocks = _resource_blocks(content, "aws_s3_bucket_public_access_block")
+        covered: set[str] = set()
+        for _, block_content, _ in block_blocks:
+            for ref in _BUCKET_REF_RE.finditer(block_content):
+                covered.add(ref.group(1))
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for name, _, start in bucket_blocks:
+            if name not in covered:
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
+class TfS3EncryptionDisabled(Rule):
+    id = "TF_S3_ENCRYPTION_DISABLED"
+    category = "storage"
+    title = "S3 bucket has no server-side encryption configured"
+    description = (
+        "Detects aws_s3_bucket resources with no associated "
+        "aws_s3_bucket_server_side_encryption_configuration resource."
+    )
+    severity = Severity.high
+    tags = ["terraform", "s3", "encryption"]
+    remediation = (
+        "Configure server-side encryption using "
+        "aws_s3_bucket_server_side_encryption_configuration with AES256 or aws:kms."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        bucket_blocks = _resource_blocks(content, "aws_s3_bucket")
+        sse_blocks = _resource_blocks(
+            content, "aws_s3_bucket_server_side_encryption_configuration"
+        )
+        covered: set[str] = set()
+        for _, block_content, _ in sse_blocks:
+            for ref in _BUCKET_REF_RE.finditer(block_content):
+                covered.add(ref.group(1))
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for name, _, start in bucket_blocks:
+            if name not in covered:
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
 
 
 class TfEbsNoEncryption(_S):
@@ -376,6 +528,75 @@ class TfRdsNoBackup(_S):
     pattern = re.compile(r"backup_retention_period\s*=\s*0\b", re.IGNORECASE)
 
 
+_DELETION_PROT_TRUE_RE = re.compile(r"deletion_protection\s*=\s*true", re.IGNORECASE)
+_STORAGE_ENCRYPTED_TRUE_RE = re.compile(r"storage_encrypted\s*=\s*true", re.IGNORECASE)
+
+
+class TfRdsDeletionProtectionDisabled(Rule):
+    id = "TF_RDS_DELETION_PROTECTION_DISABLED"
+    category = "storage"
+    title = "RDS instance deletion protection disabled"
+    description = (
+        "Detects aws_db_instance resources where deletion_protection is false or "
+        "not set. The default is false, leaving the database unprotected from "
+        "accidental deletion."
+    )
+    severity = Severity.medium
+    tags = ["terraform", "rds"]
+    remediation = (
+        "Set deletion_protection = true to prevent accidental database deletion."
+    )
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_db_instance"):
+            if not _DELETION_PROT_TRUE_RE.search(block_content):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
+class TfRdsStorageEncryptedDisabled(Rule):
+    id = "TF_RDS_STORAGE_ENCRYPTED_DISABLED"
+    category = "storage"
+    title = "RDS instance storage encryption disabled"
+    description = (
+        "Detects aws_db_instance resources where storage_encrypted is false or "
+        "not set. The default is false, leaving data at rest unencrypted."
+    )
+    severity = Severity.high
+    tags = ["terraform", "rds", "encryption"]
+    remediation = "Set storage_encrypted = true to encrypt data at rest."
+
+    def match(self, content: str, filename: str) -> List[Finding]:
+        findings: List[Finding] = []
+        lines = content.splitlines()
+        for _, block_content, start in _resource_blocks(content, "aws_db_instance"):
+            if not _STORAGE_ENCRYPTED_TRUE_RE.search(block_content):
+                line_start, _ = _find_line_numbers(content, start)
+                snippet = lines[line_start - 1].strip() if lines else ""
+                findings.append(
+                    Finding(
+                        rule_id=self.id,
+                        line_start=line_start,
+                        line_end=line_start,
+                        snippet=snippet,
+                        extra={"filename": filename},
+                    )
+                )
+        return findings
+
+
 # ── Workload / Compute ────────────────────────────────────────────────────────
 
 
@@ -451,12 +672,16 @@ def get_rules() -> List[Rule]:
         TfPublicS3PolicyPrincipal(),
         TfS3PublicAccessBlockDisabled(),
         TfS3VersioningDisabled(),
+        TfS3PublicAccessNotBlocked(),
+        TfS3EncryptionDisabled(),
         TfEbsNoEncryption(),
         # Database
         TfRdsNoEncryption(),
         TfRdsPubliclyAccessible(),
         TfRdsNoDeletionProtection(),
         TfRdsNoBackup(),
+        TfRdsDeletionProtectionDisabled(),
+        TfRdsStorageEncryptedDisabled(),
         # Workload
         TfEc2Imdsv1(),
         # Logging

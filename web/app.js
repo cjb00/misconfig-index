@@ -33,10 +33,16 @@ const RULE_LABELS = {
   K8S_HOST_NETWORK:         "hostNetwork or hostPID enabled",
   TF_IAM_WILDCARD:          "IAM wildcard resource (*)",
   TF_IAM_WILDCARD_HCL:              "IAM wildcard resource in HCL policy",
-  TF_IAM_WILDCARD_RESOURCES_HCL:   "IAM wildcard resource in HCL policy",
-  TF_SG_ALL_TRAFFIC:               "Security group allows all traffic (protocol -1)",
-  DOCKER_LATEST_TAG:               "Dockerfile uses :latest base image",
-  DOCKER_ROOT_USER:         "Dockerfile runs as root user",
+  TF_IAM_WILDCARD_RESOURCES_HCL:        "IAM wildcard resource in HCL policy",
+  TF_SG_ALL_TRAFFIC:                    "Security group allows all traffic (protocol -1)",
+  DOCKER_LATEST_TAG:                    "Dockerfile uses :latest base image",
+  DOCKER_ROOT_USER:                     "Dockerfile runs as root user",
+  TF_S3_PUBLIC_ACCESS_NOT_BLOCKED:      "S3 bucket public access not blocked",
+  TF_S3_VERSIONING_DISABLED:            "S3 bucket versioning disabled",
+  TF_S3_ENCRYPTION_DISABLED:            "S3 bucket encryption disabled",
+  TF_RDS_PUBLICLY_ACCESSIBLE:           "RDS instance publicly accessible",
+  TF_RDS_DELETION_PROTECTION_DISABLED:  "RDS deletion protection disabled",
+  TF_RDS_STORAGE_ENCRYPTED_DISABLED:    "RDS storage encryption disabled",
 };
 function ruleLabel(id) { return RULE_LABELS[id] || id; }
 
